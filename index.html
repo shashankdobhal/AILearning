@@ -4,6 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Schools - Learn AI Online</title>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCgJwZsLdbco2e7rGRBpfxwh5tWsU5jPf4",
+    authDomain: "ai-schools-e3a0c.firebaseapp.com",
+    projectId: "ai-schools-e3a0c",
+    storageBucket: "ai-schools-e3a0c.firebasestorage.app",
+    messagingSenderId: "904433139202",
+    appId: "1:904433139202:web:811db27999fd4266c9f11b",
+    measurementId: "G-CSQDMKHEGE"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Auth state listener — keep UI in sync
+  onAuthStateChanged(auth, user => {
+    window._adminUser = user || null;
+    const indicator = document.getElementById('adminIndicator');
+    if (indicator) indicator.style.display = user ? 'inline-flex' : 'none';
+  });
+
+  window.firebaseLogin = async (email, password) => {
+    await signInWithEmailAndPassword(auth, email, password);
+  };
+
+  window.firebaseLogout = async () => {
+    await signOut(auth);
+  };
+
+  window.getAdminUser = () => window._adminUser;
+
+  // Save signup to Firestore
+  window.saveSignupToFirebase = async function(data) {
+    await addDoc(collection(db, "signups"), {
+      ...data,
+      createdAt: serverTimestamp()
+    });
+  };
+
+  // Load all signups from Firestore
+  window.loadSignupsFromFirebase = async function() {
+    const snap = await getDocs(collection(db, "signups"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  };
+
+  // Delete a signup doc by ID
+  window.deleteSignupFromFirebase = async function(id) {
+    await deleteDoc(doc(db, "signups", id));
+  };
+
+  // Delete ALL signups
+  window.clearAllSignupsFromFirebase = async function() {
+    const snap = await getDocs(collection(db, "signups"));
+    await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+  };
+</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; }
@@ -16,6 +78,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
   }
   .topbar .logo { font-size: 26px; font-weight: 700; color: #04AA6D; letter-spacing: 1px; }
   .topbar nav a {
@@ -178,7 +243,7 @@
   .quiz-feedback { margin-top: 12px; font-size: 14px; font-weight: 600; display: none; }
 
   /* Progress bar */
-  .progress-wrap { background: #f1f1f1; padding: 12px 20px; border-bottom: 1px solid #ddd; }
+  .progress-wrap { background: #f1f1f1; padding: 12px 20px; border-bottom: 1px solid #ddd; position: sticky; top: 45px; z-index: 999; }
   .progress-label { font-size: 12px; color: #666; margin-bottom: 5px; }
   .progress-bar { background: #ddd; height: 6px; border-radius: 3px; }
   .progress-fill { background: #04AA6D; height: 6px; border-radius: 3px; transition: width 0.4s; }
@@ -202,6 +267,78 @@
   .feature-item p { font-size: 13px; color: #666; }
   footer { background: #282A35; color: #aaa; text-align: center; padding: 30px 20px; font-size: 13px; }
   footer a { color: #04AA6D; text-decoration: none; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 2000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; padding: 36px 32px; width: 100%;
+    max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); position: relative;
+    animation: popIn 0.2s ease;
+  }
+  @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px; font-size: 22px; cursor: pointer;
+    color: #999; background: none; border: none; line-height: 1;
+  }
+  .modal-close:hover { color: #333; }
+  .modal h2 { font-size: 22px; color: #282A35; margin-bottom: 6px; }
+  .modal .modal-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 10px 13px; border: 1.5px solid #ddd; border-radius: 6px;
+    font-size: 14px; outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #04AA6D; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-submit {
+    width: 100%; background: #04AA6D; color: #fff; border: none; padding: 12px;
+    border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px;
+  }
+  .btn-submit:hover { background: #059862; }
+  .modal-success { display: none; text-align: center; padding: 20px 0; }
+  .modal-success .tick { font-size: 52px; }
+  .modal-success h3 { font-size: 20px; color: #282A35; margin: 12px 0 6px; }
+  .modal-success p { color: #666; font-size: 14px; }
+
+  /* Admin login modal */
+  .admin-login-box {
+    background:#fff; border-radius:12px; padding:36px 32px; width:100%;
+    max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative;
+    animation: popIn 0.2s ease;
+  }
+  .admin-login-box h2 { font-size:20px; color:#282A35; margin-bottom:6px; }
+  .admin-login-box .modal-sub { font-size:13px; color:#888; margin-bottom:22px; }
+  #adminLoginError { color:#e74c3c; font-size:13px; margin-bottom:8px; display:none; }
+
+  /* Admin indicator badge in topbar */
+  #adminIndicator {
+    display:none; align-items:center; gap:6px; background:#1a3a2a;
+    border:1px solid #04AA6D; border-radius:20px; padding:4px 12px;
+    font-size:12px; color:#04AA6D; margin-left:12px; cursor:pointer;
+  }
+  #adminIndicator:hover { background:#0e2a1a; }
+
+  /* Admin panel */
+  .admin-panel {
+    display: none; position: fixed; inset: 0; background: #f1f1f1; z-index: 1900;
+    overflow-y: auto; padding: 30px;
+  }
+  .admin-panel h2 { font-size: 24px; color: #282A35; margin-bottom: 20px; }
+  .admin-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .admin-table th { background: #282A35; color: #fff; padding: 12px 16px; text-align: left; font-size: 13px; }
+  .admin-table td { padding: 11px 16px; border-bottom: 1px solid #eee; font-size: 13px; color: #444; }
+  .admin-table tr:last-child td { border-bottom: none; }
+  .admin-table tr:hover td { background: #f9f9f9; }
+  .btn-export {
+    background: #3498db; color: #fff; border: none; padding: 9px 18px;
+    border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; margin-left: 10px;
+  }
+  .btn-danger { background: #e74c3c; }
 </style>
 </head>
 <body>
@@ -214,8 +351,115 @@
     <a href="#" onclick="showCourse('intro')">Courses</a>
     <a href="#" onclick="alert('Coming soon!')">References</a>
     <a href="#" onclick="alert('Coming soon!')">Exercises</a>
-    <a href="#" class="btn-green" style="margin-left:20px">Sign Up Free</a>
+    <a href="#" class="btn-green" style="margin-left:20px" onclick="openSignup(); return false;">Sign Up Free</a>
+    <span id="adminIndicator" onclick="openAdmin()">🔒 Admin</span>
   </nav>
+</div>
+
+<!-- Admin Login Modal -->
+<div class="modal-overlay" id="adminLoginModal" onclick="closeAdminLoginOnBg(event)">
+  <div class="admin-login-box">
+    <button class="modal-close" onclick="closeAdminLogin()">×</button>
+    <h2>🔐 Admin Login</h2>
+    <p class="modal-sub">Sign in with your Firebase admin account.</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="admin_email" placeholder="admin@example.com" onkeydown="if(event.key==='Enter') handleAdminLogin()">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="admin_password" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleAdminLogin()">
+    </div>
+    <p id="adminLoginError"></p>
+    <button class="btn-submit" id="adminLoginBtn" onclick="handleAdminLogin()">Sign In →</button>
+  </div>
+</div>
+
+<!-- Sign Up Modal -->
+<div class="modal-overlay" id="signupModal" onclick="closeSignupOnBg(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSignup()">×</button>
+    <div id="signupForm">
+      <h2>🚀 Start Learning for Free</h2>
+      <p class="modal-sub">Join thousands of learners mastering AI. No credit card required.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="su_fname" placeholder="Jane" required>
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="su_lname" placeholder="Doe" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="su_email" placeholder="jane@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="su_phone" placeholder="+1 555 000 0000">
+      </div>
+      <div class="form-group">
+        <label>I am a...</label>
+        <select id="su_role">
+          <option value="">Select your background</option>
+          <option>Student</option>
+          <option>Working Professional</option>
+          <option>Developer / Engineer</option>
+          <option>Researcher</option>
+          <option>Business / Management</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Which course are you most interested in?</label>
+        <select id="su_course">
+          <option value="">Select a course</option>
+          <option>AI Basics</option>
+          <option>Machine Learning</option>
+          <option>Deep Learning</option>
+          <option>All of them!</option>
+        </select>
+      </div>
+      <p id="su_error" style="color:#e74c3c;font-size:13px;margin-bottom:8px;display:none"></p>
+      <button class="btn-submit" onclick="handleSignup()">Create Free Account →</button>
+    </div>
+    <div class="modal-success" id="signupSuccess">
+      <div class="tick">🎉</div>
+      <h3>You're in!</h3>
+      <p>Welcome aboard. Start your first lesson now and level up your AI knowledge.</p>
+      <button class="btn-submit" style="margin-top:20px" onclick="closeSignup(); showCourse('ai')">Go to AI Basics →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin-panel" id="adminPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <h2>📋 Signups Dashboard</h2>
+      <p style="font-size:12px;color:#888;margin-top:4px">Signed in as <strong id="adminUserEmail"></strong></p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-export btn-danger" onclick="clearSignups()">🗑 Clear All</button>
+      <button class="btn-export" style="background:#888" onclick="adminLogout()">⏏ Sign Out</button>
+      <button class="btn-export" style="background:#555" onclick="closeAdmin()">✕ Close</button>
+    </div>
+  </div>
+  <p id="adminCount" style="font-size:14px;color:#666;margin-bottom:16px"></p>
+  <div style="overflow-x:auto">
+    <table class="admin-table" id="signupsTable">
+      <thead>
+        <tr>
+          <th>#</th><th>First Name</th><th>Last Name</th><th>Email</th>
+          <th>Phone</th><th>Role</th><th>Course Interest</th><th>Signed Up</th>
+        </tr>
+      </thead>
+      <tbody id="signupsBody"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- HOME PAGE -->
@@ -225,8 +469,8 @@
     <h1>Learn <span>Artificial Intelligence</span><br>The Easy Way</h1>
     <p>Free tutorials, interactive examples, and quizzes to help you master AI from the ground up.</p>
     <div class="hero-btns">
-      <button class="btn-green" onclick="showCourse('intro')" style="font-size:16px;padding:12px 28px">Start Learning AI ▶</button>
-      <button onclick="showCourse('intro')" style="background:transparent;border:2px solid #04AA6D;color:#04AA6D;padding:11px 24px;border-radius:4px;cursor:pointer;font-size:15px;font-weight:600">View Course</button>
+      <button class="btn-green" onclick="showCourse('ai')" style="font-size:16px;padding:12px 28px">Start Learning AI ▶</button>
+      <button onclick="showCourse('ai')" style="background:transparent;border:2px solid #04AA6D;color:#04AA6D;padding:11px 24px;border-radius:4px;cursor:pointer;font-size:15px;font-weight:600">View Course</button>
     </div>
   </div>
 
@@ -234,24 +478,24 @@
   <div class="courses-strip">
     <h2>Our Courses</h2>
     <div class="course-cards">
-      <a class="course-card" onclick="showCourse('intro')">
+      <a class="course-card" onclick="showCourse('ai')">
         <div class="icon">🤖</div>
         <h3>AI Basics</h3>
         <p>Understand what AI is, how it works, and where it's used — no coding required.</p>
         <span class="badge">10 Lessons</span>
       </a>
-      <div class="course-card" style="opacity:0.5;cursor:default">
+      <a class="course-card" onclick="showCourse('ml')">
         <div class="icon">🧠</div>
         <h3>Machine Learning</h3>
         <p>Dive into supervised, unsupervised, and reinforcement learning.</p>
-        <span class="badge" style="background:#aaa">Coming Soon</span>
-      </div>
-      <div class="course-card" style="opacity:0.5;cursor:default">
+        <span class="badge">10 Lessons</span>
+      </a>
+      <a class="course-card" onclick="showCourse('dl')">
         <div class="icon">🔬</div>
         <h3>Deep Learning</h3>
         <p>Neural networks, CNNs, RNNs, transformers and more.</p>
-        <span class="badge" style="background:#aaa">Coming Soon</span>
-      </div>
+        <span class="badge">10 Lessons</span>
+      </a>
     </div>
   </div>
 
@@ -965,34 +1209,1596 @@ You now understand: what AI is, its history, types, how machine learning and neu
   }
 ];
 
+const mlLessons = [
+  {
+    title: "What is Machine Learning?",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › <a onclick="void(0)">Machine Learning</a> › What is ML?</div>
+<h1>What is Machine Learning?</h1>
+<p><strong>Machine Learning (ML)</strong> is a subset of AI that gives computers the ability to learn from data and improve their performance on tasks <em>without being explicitly programmed</em>.</p>
+<div class="info-box">💡 <strong>Key Insight:</strong> Instead of writing rules manually, you feed data to an algorithm and it discovers the rules itself.</div>
+
+<h2>Traditional Programming vs Machine Learning</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
+  <div style="background:#fff3cd;border-radius:8px;padding:16px;border:1px solid #ffc107">
+    <strong>Traditional Programming</strong><br><br>
+    Data + Rules → <strong>Answers</strong>
+    <ul style="margin-top:10px;font-size:13px">
+      <li>You write all the logic</li>
+      <li>Explicit if/else rules</li>
+      <li>Breaks on new scenarios</li>
+    </ul>
+  </div>
+  <div style="background:#e8f5ee;border-radius:8px;padding:16px;border:1px solid #04AA6D">
+    <strong>Machine Learning</strong><br><br>
+    Data + Answers → <strong>Rules</strong>
+    <ul style="margin-top:10px;font-size:13px">
+      <li>Algorithm finds patterns</li>
+      <li>Learns from examples</li>
+      <li>Adapts to new data</li>
+    </ul>
+  </div>
+</div>
+
+<h2>The ML Process</h2>
+<ol>
+  <li><strong>Collect Data</strong> — Gather relevant examples</li>
+  <li><strong>Prepare Data</strong> — Clean, format, and split the data</li>
+  <li><strong>Choose a Model</strong> — Select the right algorithm</li>
+  <li><strong>Train</strong> — Feed data to the model so it learns</li>
+  <li><strong>Evaluate</strong> — Measure how well it performs</li>
+  <li><strong>Tune</strong> — Improve by adjusting parameters</li>
+  <li><strong>Deploy</strong> — Use the model in the real world</li>
+</ol>
+
+<h2>Real-World Example</h2>
+<p>A spam filter learns from thousands of emails labeled "spam" and "not spam". It discovers that emails with words like "FREE MONEY" or "Click here" tend to be spam — without anyone writing those rules explicitly.</p>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>ML Concept Demo</span><button class="tryit-run" onclick="runTryit('ml0')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editorml0">// The ML mindset:
+// We have labelled examples (training data)
+const trainingData = [
+  { hours_studied: 1, passed: false },
+  { hours_studied: 2, passed: false },
+  { hours_studied: 3, passed: true  },
+  { hours_studied: 4, passed: true  },
+  { hours_studied: 5, passed: true  },
+];
+
+// ML finds the pattern: study > 2.5 hours → likely pass
+// Then predicts on NEW data:
+function predict(hours) {
+  return hours > 2.5 ? "Pass ✅" : "Fail ❌";
+}
+
+console.log("1 hour: " + predict(1));
+console.log("3 hours: " + predict(3));
+console.log("6 hours: " + predict(6));</textarea>
+    <div class="tryit-output" id="outputml0"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ In Machine Learning, what does the algorithm learn FROM?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Manually written rules by programmers</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Patterns in training data</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Random guesses that improve over time</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Instructions downloaded from the internet</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Types of Machine Learning",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Types of ML</div>
+<h1>Types of Machine Learning</h1>
+<p>There are three main paradigms of machine learning, each suited to different types of problems and data.</p>
+
+<h2>1. Supervised Learning</h2>
+<p>The model learns from <strong>labeled data</strong> — each training example has an input and a known correct output.</p>
+<div class="info-box">📌 Think of it like learning with a teacher who marks your work right or wrong.</div>
+<ul>
+  <li><strong>Classification</strong> — Predict a category (spam/not spam, cat/dog)</li>
+  <li><strong>Regression</strong> — Predict a number (house price, temperature)</li>
+</ul>
+<p><strong>Algorithms:</strong> Linear Regression, Logistic Regression, Decision Trees, SVM, Neural Networks</p>
+
+<h2>2. Unsupervised Learning</h2>
+<p>The model finds <strong>hidden patterns</strong> in unlabeled data — no correct answers provided.</p>
+<div class="info-box">📌 Like exploring a new city with no map — you discover the structure yourself.</div>
+<ul>
+  <li><strong>Clustering</strong> — Group similar items (customer segments)</li>
+  <li><strong>Dimensionality Reduction</strong> — Compress data while keeping important info</li>
+  <li><strong>Anomaly Detection</strong> — Find unusual data points (fraud detection)</li>
+</ul>
+<p><strong>Algorithms:</strong> K-Means, DBSCAN, PCA, Autoencoders</p>
+
+<h2>3. Reinforcement Learning</h2>
+<p>An <strong>agent</strong> learns by interacting with an environment, receiving <strong>rewards</strong> for good actions and <strong>penalties</strong> for bad ones.</p>
+<div class="info-box">📌 Like training a dog with treats — reward good behaviour, ignore or penalise bad.</div>
+<ul>
+  <li>Agent takes actions in an environment</li>
+  <li>Receives a reward signal</li>
+  <li>Learns a policy to maximise total reward</li>
+</ul>
+<p><strong>Examples:</strong> AlphaGo, game-playing AI, robotics, recommendation systems</p>
+
+<h2>Comparison Table</h2>
+<div style="overflow-x:auto;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+  <tr style="background:#282A35;color:#fff">
+    <th style="padding:10px 14px;text-align:left">Type</th>
+    <th style="padding:10px 14px;text-align:left">Data</th>
+    <th style="padding:10px 14px;text-align:left">Goal</th>
+    <th style="padding:10px 14px;text-align:left">Example</th>
+  </tr>
+  <tr style="background:#f9f9f9">
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Supervised</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Labeled</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Predict output</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Spam filter</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Unsupervised</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Unlabeled</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Find structure</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Customer groups</td>
+  </tr>
+  <tr style="background:#f9f9f9">
+    <td style="padding:10px 14px"><strong>Reinforcement</strong></td>
+    <td style="padding:10px 14px">Rewards</td>
+    <td style="padding:10px 14px">Maximise reward</td>
+    <td style="padding:10px 14px">Game AI</td>
+  </tr>
+</table>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ You want to group customers by purchasing behaviour with no predefined categories. Which ML type fits best?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Supervised Learning</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Unsupervised Learning</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Reinforcement Learning</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Deep Learning</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Data & Preprocessing",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Data & Preprocessing</div>
+<h1>Data & Preprocessing</h1>
+<p>In ML, <strong>"garbage in, garbage out"</strong> — the quality of your data determines the quality of your model. Data preprocessing is often 80% of the real work.</p>
+
+<h2>Common Data Problems</h2>
+<ul>
+  <li><strong>Missing values</strong> — Some rows have blank fields</li>
+  <li><strong>Duplicates</strong> — The same record appears twice</li>
+  <li><strong>Outliers</strong> — Extreme values that skew results</li>
+  <li><strong>Wrong data types</strong> — Numbers stored as text</li>
+  <li><strong>Inconsistent formatting</strong> — "USA", "U.S.A", "us" for the same country</li>
+  <li><strong>Imbalanced classes</strong> — 99% "not fraud", 1% "fraud"</li>
+</ul>
+
+<h2>Key Preprocessing Steps</h2>
+
+<h3>1. Handle Missing Values</h3>
+<div class="code-box"><span class="cm">// Options for missing data:</span>
+<br>// a) Remove rows with missing values
+<br>data = data.filter(row => row.age !== null);
+<br>
+<br><span class="cm">// b) Fill with mean/median/mode</span>
+<br>const meanAge = average(data.map(r => r.age));
+<br>data = data.map(r => ({ ...r, age: r.age ?? meanAge }));</div>
+
+<h3>2. Feature Scaling</h3>
+<p>Algorithms like SVM and KNN are sensitive to the scale of features. A salary of 50,000 should not dominate an age of 35 just because it's a bigger number.</p>
+<div class="code-box"><span class="cm">// Min-Max Normalisation (scales to 0–1)</span>
+<br>normalize(x) = (x - min) / (max - min)
+<br>
+<br><span class="cm">// Standardisation (mean=0, std=1)</span>
+<br>standardize(x) = (x - mean) / std_deviation</div>
+
+<h3>3. Encode Categorical Variables</h3>
+<div class="code-box"><span class="cm">// "colour" can't be fed as text to an algorithm</span>
+<br>colour: "red"   → [1, 0, 0]
+<br>colour: "green" → [0, 1, 0]
+<br>colour: "blue"  → [0, 0, 1]
+<br><span class="cm">// This is called One-Hot Encoding</span></div>
+
+<h3>4. Train / Validation / Test Split</h3>
+<div class="info-box">📊 <strong>Standard split:</strong><br>
+• <strong>Training set (70–80%)</strong> — Model learns from this<br>
+• <strong>Validation set (10–15%)</strong> — Tune hyperparameters<br>
+• <strong>Test set (10–15%)</strong> — Final unbiased evaluation
+</div>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>Preprocessing Demo</span><button class="tryit-run" onclick="runTryit('ml2')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editorml2">const data = [
+  { age: 25, salary: 50000 },
+  { age: 30, salary: 60000 },
+  { age: null, salary: 55000 },  // missing age
+  { age: 45, salary: 90000 },
+  { age: 22, salary: 45000 },
+];
+
+// Step 1: Fill missing age with mean
+const ages = data.filter(r=>r.age).map(r=>r.age);
+const meanAge = ages.reduce((a,b)=>a+b,0)/ages.length;
+const clean = data.map(r=>({...r, age: r.age ?? meanAge}));
+
+// Step 2: Normalise age (0-1)
+const minA = Math.min(...clean.map(r=>r.age));
+const maxA = Math.max(...clean.map(r=>r.age));
+const result = clean.map(r=>({
+  age_norm: ((r.age-minA)/(maxA-minA)).toFixed(2),
+  salary: r.salary
+}));
+
+result.forEach(r => console.log(JSON.stringify(r)));</textarea>
+    <div class="tryit-output" id="outputml2"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ Why is feature scaling important in ML?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It makes the data look nicer</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">It prevents large-scale features from dominating small-scale ones</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It increases the amount of training data</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It removes all missing values automatically</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Linear Regression",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Linear Regression</div>
+<h1>Linear Regression</h1>
+<p><strong>Linear Regression</strong> is one of the simplest and most widely used ML algorithms. It predicts a <em>continuous numerical value</em> by finding the best-fit line through your data.</p>
+
+<h2>The Idea</h2>
+<p>If you plot house size (m²) on the x-axis and price ($) on the y-axis, linear regression finds the straight line that best fits all the data points.</p>
+<div style="text-align:center;margin:20px 0">
+<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="max-width:400px;width:100%;background:#f9f9f9;border-radius:8px;border:1px solid #ddd">
+  <line x1="40" y1="220" x2="380" y2="220" stroke="#ccc" stroke-width="1.5"/>
+  <line x1="40" y1="220" x2="40" y2="20" stroke="#ccc" stroke-width="1.5"/>
+  <text x="200" y="250" text-anchor="middle" font-size="12" fill="#888">House Size (m²)</text>
+  <text x="14" y="120" text-anchor="middle" font-size="12" fill="#888" transform="rotate(-90,14,120)">Price ($)</text>
+  <!-- Best fit line -->
+  <line x1="60" y1="200" x2="370" y2="40" stroke="#04AA6D" stroke-width="2.5"/>
+  <!-- Data points -->
+  <circle cx="80" cy="195" r="5" fill="#3498db"/>
+  <circle cx="120" cy="170" r="5" fill="#3498db"/>
+  <circle cx="160" cy="155" r="5" fill="#3498db"/>
+  <circle cx="200" cy="130" r="5" fill="#3498db"/>
+  <circle cx="240" cy="110" r="5" fill="#3498db"/>
+  <circle cx="280" cy="95" r="5" fill="#3498db"/>
+  <circle cx="320" cy="75" r="5" fill="#3498db"/>
+  <circle cx="350" cy="55" r="5" fill="#3498db"/>
+  <text x="290" y="70" font-size="11" fill="#04AA6D">Best-fit line</text>
+</svg>
+</div>
+
+<h2>The Formula</h2>
+<div class="code-box">y = mx + b
+<br>
+<br>y = predicted value (house price)
+<br>x = input feature (house size)
+<br>m = slope (weight) — how much y changes per unit of x
+<br>b = intercept (bias) — value of y when x = 0</div>
+
+<p>For multiple features (multiple regression):</p>
+<div class="code-box">y = w₁x₁ + w₂x₂ + w₃x₃ + ... + b
+<br>
+<br><span class="cm">// e.g. price = 200×(size) + 5000×(bedrooms) + 1000×(age) + 50000</span></div>
+
+<h2>How It Learns: Gradient Descent</h2>
+<p>The algorithm minimises the <strong>Mean Squared Error (MSE)</strong> — the average of squared differences between predicted and actual values.</p>
+<div class="code-box"><span class="cm">// Loss function (what we minimize)</span>
+<br>MSE = (1/n) × Σ(predicted - actual)²
+<br>
+<br><span class="cm">// Gradient descent nudges weights downhill</span>
+<br>w = w - learning_rate × gradient</div>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>Linear Regression Demo</span><button class="tryit-run" onclick="runTryit('ml3')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editorml3">// Simple linear regression from scratch
+const data = [
+  {x: 50, y: 150000}, {x: 80, y: 220000},
+  {x: 100, y: 280000},{x: 120, y: 320000},
+  {x: 150, y: 400000}
+];
+
+const n = data.length;
+const sumX  = data.reduce((s,p)=>s+p.x, 0);
+const sumY  = data.reduce((s,p)=>s+p.y, 0);
+const sumXY = data.reduce((s,p)=>s+p.x*p.y, 0);
+const sumX2 = data.reduce((s,p)=>s+p.x*p.x, 0);
+
+const m = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
+const b = (sumY - m*sumX) / n;
+
+console.log("Slope (m):", m.toFixed(2), "$/m²");
+console.log("Intercept (b): $" + b.toFixed(0));
+console.log("Prediction 90m²: $" + (m*90+b).toFixed(0));
+console.log("Prediction 200m²: $" + (m*200+b).toFixed(0));</textarea>
+    <div class="tryit-output" id="outputml3"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What type of output does Linear Regression predict?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">A category (e.g. cat or dog)</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">A continuous number (e.g. price)</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">A cluster label</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">A probability between 0 and 100%</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Classification & Logistic Regression",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Classification</div>
+<h1>Classification & Logistic Regression</h1>
+<p><strong>Classification</strong> predicts which <em>category</em> an input belongs to. Instead of a number, the output is a class label like "spam/not spam" or "cat/dog/bird".</p>
+
+<h2>Binary vs Multi-Class</h2>
+<ul>
+  <li><strong>Binary Classification</strong> — 2 classes: spam vs not-spam, fraud vs legitimate</li>
+  <li><strong>Multi-class Classification</strong> — 3+ classes: handwritten digit (0–9), flower species</li>
+</ul>
+
+<h2>Logistic Regression</h2>
+<p>Despite its name, Logistic Regression is a <em>classification</em> algorithm. It uses the <strong>sigmoid function</strong> to squash any number into a probability between 0 and 1.</p>
+<div class="code-box"><span class="cm">// Sigmoid function: maps any number → (0, 1)</span>
+<br>sigmoid(z) = 1 / (1 + e^(-z))
+<br>
+<br>sigmoid(-10) ≈ 0.00005   → class 0
+<br>sigmoid(0)   = 0.5       → uncertain
+<br>sigmoid(10)  ≈ 0.99995   → class 1
+<br>
+<br><span class="cm">// Decision boundary:</span>
+<br>if probability >= 0.5 → predict class 1
+<br>if probability < 0.5  → predict class 0</div>
+
+<h2>Popular Classification Algorithms</h2>
+<ul>
+  <li><strong>Logistic Regression</strong> — Fast, interpretable, great baseline</li>
+  <li><strong>Decision Trees</strong> — Easy to visualise and explain</li>
+  <li><strong>Random Forest</strong> — Ensemble of trees, very accurate</li>
+  <li><strong>SVM</strong> — Finds optimal boundary between classes</li>
+  <li><strong>K-Nearest Neighbours (KNN)</strong> — Classifies by looking at nearby points</li>
+  <li><strong>Neural Networks</strong> — Best for complex patterns (images, text)</li>
+</ul>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>Logistic Regression Demo</span><button class="tryit-run" onclick="runTryit('ml4')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editorml4">// Sigmoid + simple classifier
+function sigmoid(z) {
+  return 1 / (1 + Math.exp(-z));
+}
+
+// Pretrained weights (learned from data)
+const w_hours = 1.5;
+const w_prev  = 2.0;
+const bias    = -4.0;
+
+function predictPass(hoursStudied, prevGrade) {
+  const z = w_hours * hoursStudied + w_prev * prevGrade + bias;
+  const prob = sigmoid(z);
+  const label = prob >= 0.5 ? "PASS ✅" : "FAIL ❌";
+  return "prob=" + (prob*100).toFixed(1) + "% → " + label;
+}
+
+// prevGrade: 0=poor, 1=average, 2=good
+console.log("1h study, poor grade:    ", predictPass(1, 0));
+console.log("3h study, average grade: ", predictPass(3, 1));
+console.log("5h study, good grade:    ", predictPass(5, 2));</textarea>
+    <div class="tryit-output" id="outputml4"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does the sigmoid function output?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Any real number from -∞ to +∞</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">A probability value between 0 and 1</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">A class label directly</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">An integer between 0 and 100</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Decision Trees & Random Forests",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Decision Trees</div>
+<h1>Decision Trees & Random Forests</h1>
+<p>A <strong>Decision Tree</strong> splits data into branches based on feature values, building a tree of yes/no decisions that leads to a prediction.</p>
+
+<h2>How a Decision Tree Works</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+Is it raining?
+├── YES → Is it cold?
+│         ├── YES → 🧥 Wear a coat
+│         └── NO  → ☂️ Take umbrella
+└── NO  → Is it sunny?
+          ├── YES → 😎 Wear sunglasses
+          └── NO  → 👕 Dress normally
+</pre>
+</div>
+
+<h2>Splitting Criteria</h2>
+<p>The tree picks the feature and split point that best separates the classes using metrics like:</p>
+<ul>
+  <li><strong>Gini Impurity</strong> — Measures how often a randomly chosen element would be misclassified</li>
+  <li><strong>Information Gain (Entropy)</strong> — Measures the reduction in uncertainty after a split</li>
+</ul>
+
+<h2>Pros & Cons of Decision Trees</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+  <div style="background:#e8f5ee;border-radius:8px;padding:16px;border:1px solid #04AA6D">
+    <strong>✅ Pros</strong>
+    <ul style="margin-top:8px;font-size:13px">
+      <li>Easy to understand & visualise</li>
+      <li>No feature scaling needed</li>
+      <li>Handles missing values</li>
+      <li>Works on numbers and categories</li>
+    </ul>
+  </div>
+  <div style="background:#fff3cd;border-radius:8px;padding:16px;border:1px solid #ffc107">
+    <strong>⚠️ Cons</strong>
+    <ul style="margin-top:8px;font-size:13px">
+      <li>Prone to overfitting</li>
+      <li>Unstable (small data changes → very different tree)</li>
+      <li>Biased toward features with more levels</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Random Forests — The Fix</h2>
+<p>A <strong>Random Forest</strong> builds <em>many</em> decision trees on random subsets of data and features, then <strong>votes</strong> on the final prediction. This dramatically reduces overfitting.</p>
+<div class="info-box">🌲🌲🌲 <strong>Ensemble learning:</strong> combining many weak models into one strong model. A forest of 500 trees almost always beats a single tree.</div>
+
+<div class="code-box"><span class="cm">// Random Forest prediction (simplified)</span>
+<br>trees = [tree1, tree2, tree3, ..., tree500]
+<br>votes = trees.map(t => t.predict(input))
+<br><span class="cm">// e.g. votes = ["spam","spam","not spam","spam",...]</span>
+<br>
+<br>result = mostCommon(votes)  <span class="cm">// majority vote wins</span></div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ How does a Random Forest make a final prediction?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It uses the first tree's prediction</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It averages all tree outputs mathematically</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">It takes a majority vote from all trees</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It picks the tree with the best training accuracy</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Support Vector Machines",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › SVM</div>
+<h1>Support Vector Machines (SVM)</h1>
+<p>A <strong>Support Vector Machine</strong> finds the optimal <em>hyperplane</em> that best separates two classes — maximising the margin between them.</p>
+
+<h2>The Core Idea: Maximum Margin</h2>
+<div style="text-align:center;margin:20px 0">
+<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" style="max-width:380px;width:100%;background:#f9f9f9;border-radius:8px;border:1px solid #ddd">
+  <!-- Margin zone -->
+  <rect x="155" y="10" width="70" height="220" fill="#e8f5ee" opacity="0.5"/>
+  <!-- Decision boundary -->
+  <line x1="190" y1="10" x2="190" y2="230" stroke="#04AA6D" stroke-width="2.5" stroke-dasharray="6,3"/>
+  <!-- Margin lines -->
+  <line x1="155" y1="10" x2="155" y2="230" stroke="#04AA6D" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+  <line x1="225" y1="10" x2="225" y2="230" stroke="#04AA6D" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+  <!-- Class A dots (left) -->
+  <circle cx="60" cy="60" r="10" fill="#3498db"/><circle cx="100" cy="100" r="10" fill="#3498db"/>
+  <circle cx="70" cy="140" r="10" fill="#3498db"/><circle cx="110" cy="50" r="10" fill="#3498db"/>
+  <circle cx="130" cy="170" r="10" fill="#3498db"/>
+  <!-- Class B dots (right) -->
+  <circle cx="260" cy="70" r="10" fill="#e74c3c"/><circle cx="300" cy="120" r="10" fill="#e74c3c"/>
+  <circle cx="250" cy="160" r="10" fill="#e74c3c"/><circle cx="320" cy="60" r="10" fill="#e74c3c"/>
+  <circle cx="280" cy="190" r="10" fill="#e74c3c"/>
+  <!-- Support vectors (circled) -->
+  <circle cx="130" cy="170" r="14" fill="none" stroke="#3498db" stroke-width="2"/>
+  <circle cx="260" cy="70" r="14" fill="none" stroke="#e74c3c" stroke-width="2"/>
+  <!-- Labels -->
+  <text x="80" y="220" text-anchor="middle" font-size="12" fill="#3498db">Class A</text>
+  <text x="290" y="220" text-anchor="middle" font-size="12" fill="#e74c3c">Class B</text>
+  <text x="190" y="8" text-anchor="middle" font-size="10" fill="#04AA6D">← margin →</text>
+</svg>
+</div>
+
+<h2>Key Concepts</h2>
+<ul>
+  <li><strong>Hyperplane</strong> — The decision boundary (a line in 2D, a plane in 3D)</li>
+  <li><strong>Support Vectors</strong> — The data points closest to the boundary (circled above)</li>
+  <li><strong>Margin</strong> — The gap between the two classes. SVM <em>maximises</em> this gap</li>
+</ul>
+
+<h2>The Kernel Trick</h2>
+<p>What if the data isn't linearly separable? SVM uses <strong>kernel functions</strong> to map data into a higher dimension where it <em>is</em> separable.</p>
+<div class="info-box">🔮 <strong>Analogy:</strong> Imagine mixing red and blue marbles in a bowl. You can't draw a straight line between them — but if you flip the bowl upside down, the marbles separate by gravity. The kernel trick does the mathematical equivalent.</div>
+<ul>
+  <li><strong>Linear Kernel</strong> — Straight boundary, fast</li>
+  <li><strong>RBF (Gaussian) Kernel</strong> — Circular/complex boundaries, most popular</li>
+  <li><strong>Polynomial Kernel</strong> — Curved boundaries</li>
+</ul>
+
+<h2>When to Use SVM</h2>
+<ul>
+  <li>High-dimensional data (text classification, genomics)</li>
+  <li>When you have more features than samples</li>
+  <li>Clear margin of separation exists</li>
+  <li>Small to medium datasets</li>
+</ul>
+<div class="warn-box">⚠️ SVMs don't scale well to very large datasets (100k+ samples) — prefer Random Forest or Neural Networks then.</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What are "support vectors" in an SVM?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">All the training data points</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">The data points closest to the decision boundary</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The weights of the model</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The kernel functions used</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Clustering & K-Means",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Clustering</div>
+<h1>Clustering & K-Means</h1>
+<p><strong>Clustering</strong> is an unsupervised learning technique that groups similar data points together — without any predefined labels.</p>
+
+<h2>K-Means Algorithm</h2>
+<p><strong>K-Means</strong> is the most popular clustering algorithm. It partitions data into <em>K</em> groups (clusters), where each point belongs to the cluster with the nearest centre (<em>centroid</em>).</p>
+
+<h2>How K-Means Works (Step by Step)</h2>
+<ol>
+  <li><strong>Choose K</strong> — Decide how many clusters you want</li>
+  <li><strong>Initialise</strong> — Place K centroids randomly in the data space</li>
+  <li><strong>Assign</strong> — Each data point joins the nearest centroid</li>
+  <li><strong>Update</strong> — Move each centroid to the mean of its cluster</li>
+  <li><strong>Repeat</strong> — Steps 3–4 until centroids stop moving</li>
+</ol>
+
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;margin:16px 0;font-family:monospace;font-size:13px">
+<pre style="color:#333;line-height:1.8">
+Iteration 0:    Iteration 1:    Converged:
+● ●             ● ●             ● ●
+  ✦ ◆             ●◆              ◆●●
+● ●  ●          ● ● ●           ● ● ●
+    ✦                ●◆              ◆●
+  ●   ●           ●   ●           ●   ●
+
+✦ = initial centroids    ◆ = moved centroids
+</pre>
+</div>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>K-Means Demo</span><button class="tryit-run" onclick="runTryit('ml7')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editorml7">// Simplified 1D K-Means (K=2)
+const points = [1, 1.5, 2, 8, 8.5, 9, 9.5];
+
+let c1 = 1, c2 = 5; // initial centroids
+
+for (let iter = 0; iter < 5; iter++) {
+  const cluster1 = points.filter(p => Math.abs(p-c1) < Math.abs(p-c2));
+  const cluster2 = points.filter(p => Math.abs(p-c2) <= Math.abs(p-c1));
+
+  c1 = cluster1.reduce((a,b)=>a+b,0)/cluster1.length;
+  c2 = cluster2.reduce((a,b)=>a+b,0)/cluster2.length;
+}
+
+console.log("Centroid 1:", c1.toFixed(2));
+console.log("Centroid 2:", c2.toFixed(2));
+console.log("Group A:", points.filter(p=>Math.abs(p-c1)<Math.abs(p-c2)));
+console.log("Group B:", points.filter(p=>Math.abs(p-c2)<=Math.abs(p-c1)));</textarea>
+    <div class="tryit-output" id="outputml7"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Choosing K — The Elbow Method</h2>
+<p>Plot the <em>within-cluster sum of squares</em> (inertia) for different values of K. The "elbow" where the curve bends sharply is the optimal K.</p>
+<div class="code-box">K=1: inertia=2400
+<br>K=2: inertia=800   ← big drop
+<br>K=3: inertia=600   ← smaller drop
+<br>K=4: inertia=580   ← tiny drop (elbow here)
+<br>K=5: inertia=570</div>
+
+<h2>Real Applications</h2>
+<ul>
+  <li>Customer segmentation for marketing</li>
+  <li>Document/topic clustering</li>
+  <li>Image compression</li>
+  <li>Anomaly detection</li>
+  <li>Genome research</li>
+</ul>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ In K-Means, what does K represent?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The number of training iterations</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">The number of clusters to form</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The number of features in the dataset</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The learning rate</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Model Evaluation",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Model Evaluation</div>
+<h1>Model Evaluation & Overfitting</h1>
+<p>Building a model is only half the job — you need to know <em>how well it actually works</em> on unseen data, and whether it has learned genuinely useful patterns.</p>
+
+<h2>Key Metrics for Classification</h2>
+<div style="overflow-x:auto;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+  <tr style="background:#282A35;color:#fff">
+    <th style="padding:10px 14px;text-align:left">Metric</th>
+    <th style="padding:10px 14px;text-align:left">Formula</th>
+    <th style="padding:10px 14px;text-align:left">When to Use</th>
+  </tr>
+  <tr style="background:#f9f9f9">
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Accuracy</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Correct / Total</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Balanced classes</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Precision</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">TP / (TP + FP)</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Cost of false alarms is high</td>
+  </tr>
+  <tr style="background:#f9f9f9">
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Recall</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">TP / (TP + FN)</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Missing cases is costly (disease detection)</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px"><strong>F1 Score</strong></td>
+    <td style="padding:10px 14px">2 × P×R / (P+R)</td>
+    <td style="padding:10px 14px">Imbalanced classes</td>
+  </tr>
+</table>
+</div>
+
+<h2>Overfitting vs Underfitting</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;text-align:center;font-size:13px">
+  <div style="background:#fff3cd;border-radius:8px;padding:14px;border:1px solid #ffc107">
+    <strong>Underfitting</strong><br>
+    <div style="font-size:28px;margin:8px">😐</div>
+    Train: 60% | Test: 59%<br>
+    <em>Model too simple</em>
+  </div>
+  <div style="background:#e8f5ee;border-radius:8px;padding:14px;border:1px solid #04AA6D">
+    <strong>Just Right ✅</strong><br>
+    <div style="font-size:28px;margin:8px">😊</div>
+    Train: 94% | Test: 91%<br>
+    <em>Good generalisation</em>
+  </div>
+  <div style="background:#fdf0f0;border-radius:8px;padding:14px;border:1px solid #e74c3c">
+    <strong>Overfitting</strong><br>
+    <div style="font-size:28px;margin:8px">😰</div>
+    Train: 99% | Test: 65%<br>
+    <em>Memorised training data</em>
+  </div>
+</div>
+
+<h2>Preventing Overfitting</h2>
+<ul>
+  <li><strong>More data</strong> — The best cure</li>
+  <li><strong>Regularisation</strong> — L1 (Lasso) / L2 (Ridge) penalise large weights</li>
+  <li><strong>Dropout</strong> — Randomly disable neurons during training (neural networks)</li>
+  <li><strong>Cross-validation</strong> — Evaluate on multiple train/test splits</li>
+  <li><strong>Early stopping</strong> — Stop training when validation loss starts rising</li>
+  <li><strong>Simpler model</strong> — Reduce depth of tree or layers</li>
+</ul>
+
+<h2>Cross-Validation</h2>
+<div class="code-box"><span class="cm">// 5-fold cross-validation</span>
+<br>Fold 1: [Test] [Train] [Train] [Train] [Train] → acc: 91%
+<br>Fold 2: [Train] [Test] [Train] [Train] [Train] → acc: 93%
+<br>Fold 3: [Train] [Train] [Test] [Train] [Train] → acc: 89%
+<br>Fold 4: [Train] [Train] [Train] [Test] [Train] → acc: 92%
+<br>Fold 5: [Train] [Train] [Train] [Train] [Test] → acc: 90%
+<br>
+<br>Average accuracy = <strong>91%</strong>  ← much more reliable!</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ A model scores 99% on training data but only 65% on test data. This is called:</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Underfitting</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Good generalisation</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Overfitting</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Cross-validation</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Intro to Deep Learning",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Machine Learning › Deep Learning</div>
+<h1>Introduction to Deep Learning</h1>
+<p><strong>Deep Learning</strong> is a subfield of ML that uses <em>deep neural networks</em> — networks with many hidden layers. It has driven the most spectacular AI breakthroughs of the last decade.</p>
+
+<div class="info-box">🧠 <strong>Deep = many layers.</strong> A "shallow" network has 1–2 hidden layers. A "deep" network may have dozens to hundreds.</div>
+
+<h2>Why Deep Learning Now?</h2>
+<ul>
+  <li><strong>Big Data</strong> — Billions of images, texts, and videos to train on</li>
+  <li><strong>GPUs</strong> — Parallel processing makes training feasible</li>
+  <li><strong>Better algorithms</strong> — ReLU, batch normalisation, dropout, Adam optimizer</li>
+  <li><strong>Open-source frameworks</strong> — TensorFlow, PyTorch</li>
+</ul>
+
+<h2>Key Deep Learning Architectures</h2>
+
+<h3>🖼️ Convolutional Neural Networks (CNNs)</h3>
+<p>Designed for images. Convolutional layers detect local features (edges, shapes) that build up to complex objects. Used in: image classification, object detection, medical imaging.</p>
+
+<h3>📝 Recurrent Neural Networks (RNNs) / LSTMs</h3>
+<p>Designed for sequences. Each step's output feeds into the next step, giving the network "memory". Used in: time series, speech recognition, early NLP.</p>
+
+<h3>🤖 Transformers</h3>
+<p>The dominant architecture since 2017. Uses <em>self-attention</em> to relate every token to every other token simultaneously. Powers: GPT-4, Claude, BERT, Gemini.</p>
+
+<h3>🎨 Generative Adversarial Networks (GANs)</h3>
+<p>Two networks compete: a <em>generator</em> creates fake data, a <em>discriminator</em> tries to spot fakes. They improve together. Used for: image synthesis, deepfakes, data augmentation.</p>
+
+<h2>Deep Learning vs Classical ML</h2>
+<div style="overflow-x:auto;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+  <tr style="background:#282A35;color:#fff">
+    <th style="padding:10px 14px;text-align:left"></th>
+    <th style="padding:10px 14px;text-align:left">Classical ML</th>
+    <th style="padding:10px 14px;text-align:left">Deep Learning</th>
+  </tr>
+  <tr style="background:#f9f9f9">
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Data needed</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Hundreds–thousands</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Millions+</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Feature engineering</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Manual</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Automatic</td>
+  </tr>
+  <tr style="background:#f9f9f9">
+    <td style="padding:10px 14px;border-bottom:1px solid #eee"><strong>Interpretability</strong></td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">High</td>
+    <td style="padding:10px 14px;border-bottom:1px solid #eee">Low (black box)</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px"><strong>Best for</strong></td>
+    <td style="padding:10px 14px">Tabular data</td>
+    <td style="padding:10px 14px">Images, text, audio</td>
+  </tr>
+</table>
+</div>
+
+<div class="info-box">🎓 <strong>Congratulations — you've completed Machine Learning!</strong><br><br>
+You now understand: what ML is, types of learning, data preprocessing, linear regression, classification, decision trees, SVMs, clustering, model evaluation, and deep learning fundamentals.<br><br>
+<strong>Next:</strong> Try Python with scikit-learn, or explore the Deep Learning course (coming soon)!
+</div>
+
+<h2>Final Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ Which architecture powers modern LLMs like GPT-4 and Claude?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Convolutional Neural Network (CNN)</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Recurrent Neural Network (RNN)</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Generative Adversarial Network (GAN)</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Transformer</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  }
+];
+
+const dlLessons = [
+  {
+    title: "What is Deep Learning?",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › <a onclick="void(0)">Deep Learning</a> › What is Deep Learning?</div>
+<h1>What is Deep Learning?</h1>
+<p><strong>Deep Learning</strong> is a subfield of Machine Learning that uses artificial neural networks with <em>many layers</em> to learn complex patterns from large amounts of data automatically.</p>
+<div class="info-box">💡 <strong>Key Insight:</strong> "Deep" refers to the many layers in the network. Each layer learns increasingly abstract representations of the data.</div>
+
+<h2>The Hierarchy of AI</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;margin:16px 0;text-align:center">
+<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="max-width:400px;width:100%">
+  <ellipse cx="200" cy="110" rx="190" ry="100" fill="#e8f5ee" stroke="#04AA6D" stroke-width="2"/>
+  <ellipse cx="200" cy="120" rx="130" ry="65" fill="#d0eaff" stroke="#3498db" stroke-width="2"/>
+  <ellipse cx="200" cy="130" rx="70" ry="35" fill="#f5d0ff" stroke="#9b59b6" stroke-width="2"/>
+  <text x="200" y="134" text-anchor="middle" font-size="13" font-weight="bold" fill="#6c3483">Deep Learning</text>
+  <text x="200" y="168" text-anchor="middle" font-size="13" fill="#1a5276">Machine Learning</text>
+  <text x="200" y="200" text-anchor="middle" font-size="13" fill="#1e8449">Artificial Intelligence</text>
+</svg>
+</div>
+
+<h2>What Makes It Different?</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+  <div style="background:#fff3cd;border-radius:8px;padding:16px;border:1px solid #ffc107">
+    <strong>Classical ML</strong><br><br>
+    <ul style="font-size:13px;margin-left:16px">
+      <li>Manual feature engineering</li>
+      <li>Works on small data</li>
+      <li>Interpretable</li>
+      <li>Fast to train</li>
+    </ul>
+  </div>
+  <div style="background:#e8f5ee;border-radius:8px;padding:16px;border:1px solid #04AA6D">
+    <strong>Deep Learning</strong><br><br>
+    <ul style="font-size:13px;margin-left:16px">
+      <li>Automatic feature learning</li>
+      <li>Needs massive data</li>
+      <li>Black box</li>
+      <li>Needs GPU / hours to train</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Why Deep Learning Exploded After 2012</h2>
+<ul>
+  <li><strong>Big Data</strong> — ImageNet: 1.2M labeled images; internet-scale text corpora</li>
+  <li><strong>GPUs</strong> — Parallel matrix math, 100× faster than CPUs</li>
+  <li><strong>Better Algorithms</strong> — ReLU, Batch Norm, Dropout, Adam</li>
+  <li><strong>Open Frameworks</strong> — TensorFlow (2015), PyTorch (2016)</li>
+  <li><strong>Pre-trained Models</strong> — Transfer learning; don't train from scratch</li>
+</ul>
+
+<h2>What Deep Learning Can Do</h2>
+<ul>
+  <li>Recognise objects in photos with superhuman accuracy</li>
+  <li>Translate between 100+ languages in real time</li>
+  <li>Generate photorealistic images from text prompts</li>
+  <li>Write code, essays, and poetry</li>
+  <li>Detect cancer in medical scans</li>
+  <li>Play games at superhuman level</li>
+</ul>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does "deep" mean in Deep Learning?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The data is very complex</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">The neural network has many layers</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The training takes a very long time</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It requires deep mathematical knowledge</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Perceptrons & Activation Functions",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › Perceptrons & Activations</div>
+<h1>Perceptrons & Activation Functions</h1>
+<p>The <strong>perceptron</strong> is the simplest neural network unit — the building block of all deep learning models.</p>
+
+<h2>The Perceptron</h2>
+<p>A perceptron takes multiple inputs, multiplies each by a <em>weight</em>, sums them with a <em>bias</em>, then passes the result through an <em>activation function</em>.</p>
+<div style="text-align:center;margin:20px 0">
+<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg" style="max-width:420px;width:100%;background:#f9f9f9;border-radius:8px;border:1px solid #ddd">
+  <circle cx="60" cy="40"  r="18" fill="#3498db" opacity="0.85"/><text x="60" y="44"  text-anchor="middle" font-size="11" fill="white">x₁</text>
+  <circle cx="60" cy="80"  r="18" fill="#3498db" opacity="0.85"/><text x="60" y="84"  text-anchor="middle" font-size="11" fill="white">x₂</text>
+  <circle cx="60" cy="120" r="18" fill="#3498db" opacity="0.85"/><text x="60" y="124" text-anchor="middle" font-size="11" fill="white">x₃</text>
+  <line x1="78" y1="40"  x2="190" y2="78" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="78" y1="80"  x2="190" y2="80" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="78" y1="120" x2="190" y2="82" stroke="#aaa" stroke-width="1.5"/>
+  <text x="122" y="55"  font-size="10" fill="#e74c3c">w₁</text>
+  <text x="122" y="76"  font-size="10" fill="#e74c3c">w₂</text>
+  <text x="122" y="104" font-size="10" fill="#e74c3c">w₃</text>
+  <rect x="190" y="58" width="80" height="44" rx="8" fill="#9b59b6" opacity="0.9"/>
+  <text x="230" y="77"  text-anchor="middle" font-size="10" fill="white">Σ + bias</text>
+  <text x="230" y="92"  text-anchor="middle" font-size="10" fill="white">activation</text>
+  <line x1="270" y1="80" x2="340" y2="80" stroke="#aaa" stroke-width="1.5"/>
+  <circle cx="358" cy="80" r="18" fill="#04AA6D" opacity="0.9"/><text x="358" y="84" text-anchor="middle" font-size="10" fill="white">output</text>
+</svg>
+</div>
+
+<div class="code-box"><span class="cm">// Perceptron computation</span>
+<br>z = x1*w1 + x2*w2 + x3*w3 + bias
+<br>output = activation(z)</div>
+
+<h2>Why Activation Functions?</h2>
+<p>Without activation functions, stacking layers just collapses into a single linear transformation — no matter how many layers you add. Activation functions introduce <strong>non-linearity</strong>, enabling the network to learn complex patterns.</p>
+
+<h2>Common Activation Functions</h2>
+
+<h3>ReLU (Rectified Linear Unit) — Most Popular</h3>
+<div class="code-box">ReLU(x) = max(0, x)
+<br>
+<br>ReLU(-5) = 0
+<br>ReLU(0)  = 0
+<br>ReLU(3)  = 3
+<br>ReLU(7)  = 7</div>
+<p>Simple, fast, avoids the vanishing gradient problem. Used in hidden layers.</p>
+
+<h3>Sigmoid</h3>
+<div class="code-box">sigmoid(x) = 1 / (1 + e^(-x))   → output: (0, 1)
+<br><span class="cm">// Used in binary classification output layer</span></div>
+
+<h3>Softmax</h3>
+<div class="code-box">softmax(xᵢ) = e^xᵢ / Σe^xⱼ   → outputs sum to 1.0
+<br><span class="cm">// Used in multi-class output layer (probabilities)</span>
+<br>
+<br>Example: [cat: 0.75, dog: 0.20, bird: 0.05]</div>
+
+<h3>Tanh</h3>
+<div class="code-box">tanh(x) = (e^x - e^(-x)) / (e^x + e^(-x))   → output: (-1, 1)
+<br><span class="cm">// Used in RNNs</span></div>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>Activation Functions Demo</span><button class="tryit-run" onclick="runTryit('dl1')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editordl1">const relu    = x => Math.max(0, x);
+const sigmoid = x => 1 / (1 + Math.exp(-x));
+const tanh_fn = x => Math.tanh(x);
+
+const inputs = [-3, -1, 0, 1, 3];
+console.log("x     ReLU  Sigmoid  Tanh");
+console.log("─".repeat(35));
+inputs.forEach(x => {
+  console.log(
+    String(x).padEnd(6),
+    relu(x).toFixed(2).padEnd(6),
+    sigmoid(x).toFixed(2).padEnd(9),
+    tanh_fn(x).toFixed(2)
+  );
+});</textarea>
+    <div class="tryit-output" id="outputdl1"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ Why are activation functions necessary in neural networks?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">They speed up the training process</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">They reduce the number of parameters</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">They introduce non-linearity so the network can learn complex patterns</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">They prevent the model from using too much memory</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Backpropagation & Gradient Descent",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › Backpropagation</div>
+<h1>Backpropagation & Gradient Descent</h1>
+<p>These two algorithms are the engine of learning in neural networks. <strong>Gradient Descent</strong> optimises the weights; <strong>Backpropagation</strong> efficiently computes which direction to adjust them.</p>
+
+<h2>The Loss Function</h2>
+<p>A <strong>loss function</strong> measures how wrong the network's prediction is. Training minimises this number.</p>
+<div class="code-box"><span class="cm">// Mean Squared Error (regression)</span>
+<br>MSE = (1/n) × Σ(predicted - actual)²
+<br>
+<br><span class="cm">// Cross-Entropy Loss (classification)</span>
+<br>CE = -Σ actual × log(predicted)</div>
+
+<h2>Gradient Descent</h2>
+<p>Imagine the loss as a hilly landscape. Gradient Descent finds the lowest valley by always stepping in the steepest downhill direction.</p>
+<div style="text-align:center;margin:20px 0">
+<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" style="max-width:400px;width:100%;background:#f9f9f9;border-radius:8px;border:1px solid #ddd">
+  <path d="M 20,30 Q 100,160 200,150 Q 280,140 380,20" fill="none" stroke="#3498db" stroke-width="2.5"/>
+  <circle cx="80" cy="115" r="8" fill="#e74c3c"/>
+  <circle cx="130" cy="148" r="8" fill="#e74c3c" opacity="0.7"/>
+  <circle cx="175" cy="151" r="8" fill="#e74c3c" opacity="0.5"/>
+  <circle cx="210" cy="149" r="8" fill="#04AA6D"/>
+  <line x1="80" y1="115" x2="130" y2="148" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="130" y1="148" x2="175" y2="151" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="175" y1="151" x2="210" y2="149" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="65" y="105" font-size="10" fill="#e74c3c">start</text>
+  <text x="195" y="140" font-size="10" fill="#04AA6D">minimum</text>
+  <text x="150" y="175" text-anchor="middle" font-size="11" fill="#555">Weight value →</text>
+  <text x="12" y="100" font-size="10" fill="#555" transform="rotate(-90,12,100)">Loss</text>
+</svg>
+</div>
+
+<div class="code-box"><span class="cm">// Weight update rule</span>
+<br>w = w - learning_rate × gradient
+<br>
+<br><span class="cm">// learning_rate (α): step size (e.g. 0.001)</span>
+<br><span class="cm">// gradient: slope of loss with respect to w</span></div>
+
+<h2>Backpropagation</h2>
+<p>Computing the gradient for every weight by hand would be impossible. <strong>Backpropagation</strong> uses the <em>chain rule</em> of calculus to efficiently propagate the error signal backwards through the network.</p>
+
+<ol>
+  <li><strong>Forward pass</strong> — Input flows through network → get prediction</li>
+  <li><strong>Compute loss</strong> — Compare prediction to ground truth</li>
+  <li><strong>Backward pass</strong> — Propagate gradients backwards layer by layer</li>
+  <li><strong>Update weights</strong> — Nudge every weight by its gradient</li>
+  <li><strong>Repeat</strong> — For thousands of mini-batches</li>
+</ol>
+
+<h2>Optimisers</h2>
+<div style="overflow-x:auto;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+  <tr style="background:#282A35;color:#fff">
+    <th style="padding:10px 14px;text-align:left">Optimiser</th>
+    <th style="padding:10px 14px;text-align:left">Key Idea</th>
+    <th style="padding:10px 14px;text-align:left">Best For</th>
+  </tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px;border-bottom:1px solid #eee">SGD</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Plain gradient descent on mini-batches</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Simple tasks, CNNs</td></tr>
+  <tr><td style="padding:10px 14px;border-bottom:1px solid #eee">Momentum</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Accumulates velocity, smooths updates</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Faster convergence</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px;border-bottom:1px solid #eee">RMSprop</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Adapts learning rate per parameter</td><td style="padding:10px 14px;border-bottom:1px solid #eee">RNNs</td></tr>
+  <tr><td style="padding:10px 14px"><strong>Adam ✅</strong></td><td style="padding:10px 14px">Momentum + RMSprop combined</td><td style="padding:10px 14px">Default choice for most tasks</td></tr>
+</table>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does the learning rate control in gradient descent?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The number of layers in the network</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">How large each weight update step is</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The number of training examples used</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">The type of activation function used</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Convolutional Neural Networks",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › CNNs</div>
+<h1>Convolutional Neural Networks (CNNs)</h1>
+<p><strong>CNNs</strong> are the go-to architecture for image data. They use <em>convolution</em> operations to detect spatial features like edges, textures, and shapes — automatically and efficiently.</p>
+
+<h2>The Problem with Fully Connected Layers for Images</h2>
+<p>A 224×224 colour image has 150,528 pixels. A fully connected layer would need millions of parameters just for the first layer — computationally infeasible and prone to overfitting.</p>
+<div class="info-box">💡 <strong>CNN's solution:</strong> Share weights across the image using small filters (kernels). A 3×3 filter has only 9 weights regardless of image size.</div>
+
+<h2>Key CNN Layers</h2>
+
+<h3>1. Convolutional Layer</h3>
+<p>A small filter (e.g. 3×3) slides across the image, computing dot products at each position to produce a <em>feature map</em>.</p>
+<div class="code-box"><span class="cm">// A 3×3 edge-detection filter (kernel)</span>
+<br>filter = [[-1,-1,-1],
+<br>           [ 0, 0, 0],
+<br>           [ 1, 1, 1]]
+<br>
+<br><span class="cm">// Slide it over the image → highlights horizontal edges</span></div>
+
+<h3>2. Pooling Layer</h3>
+<p>Reduces spatial dimensions (downsampling), making the network more computationally efficient and translation-invariant.</p>
+<div class="code-box"><span class="cm">// Max Pooling 2×2 — keeps the highest value in each region</span>
+<br>Input:          Output (Max Pool):
+<br>1  3  2  4      3  4
+<br>5  6  7  8  →   6  8   ← takes max of each 2×2 block
+<br>1  2  3  4      5  6
+<br>5  4  6  3      5  6</div>
+
+<h3>3. Fully Connected Layer</h3>
+<p>After several conv+pool layers, the feature maps are flattened and fed into dense layers for final classification.</p>
+
+<h2>CNN Architecture (Example: VGG-style)</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+Input Image (224×224×3)
+    ↓
+Conv Layer  → 64 feature maps (222×222)
+    ↓
+Max Pool    → 64 feature maps (111×111)
+    ↓
+Conv Layer  → 128 feature maps (109×109)
+    ↓
+Max Pool    → 128 feature maps (54×54)
+    ↓
+Flatten     → 373,248 values
+    ↓
+Dense(4096) → ReLU
+    ↓
+Dense(1000) → Softmax → Class Probabilities
+</pre>
+</div>
+
+<h2>Famous CNN Architectures</h2>
+<ul>
+  <li><strong>LeNet (1998)</strong> — First successful CNN, handwritten digit recognition</li>
+  <li><strong>AlexNet (2012)</strong> — Ignited the deep learning revolution</li>
+  <li><strong>VGG (2014)</strong> — Very deep, simple 3×3 convolutions</li>
+  <li><strong>ResNet (2015)</strong> — Skip connections, 152 layers, won ImageNet</li>
+  <li><strong>EfficientNet (2019)</strong> — Best accuracy-efficiency trade-off</li>
+</ul>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What is the purpose of Max Pooling in a CNN?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To add more filters to the network</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To compute the loss during training</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">To reduce spatial dimensions and make the network more efficient</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To normalise the pixel values</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Recurrent Neural Networks",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › RNNs</div>
+<h1>Recurrent Neural Networks (RNNs)</h1>
+<p><strong>RNNs</strong> are designed for <em>sequential data</em> — text, time series, audio, video. Unlike feedforward networks, they have a feedback loop that passes information from one step to the next, giving them a form of <em>memory</em>.</p>
+
+<h2>The RNN Loop</h2>
+<div style="text-align:center;margin:20px 0">
+<svg viewBox="0 0 440 130" xmlns="http://www.w3.org/2000/svg" style="max-width:440px;width:100%;background:#f9f9f9;border-radius:8px;border:1px solid #ddd">
+  <!-- Cells -->
+  <rect x="30"  y="45" width="60" height="40" rx="6" fill="#3498db" opacity="0.85"/>
+  <rect x="140" y="45" width="60" height="40" rx="6" fill="#3498db" opacity="0.85"/>
+  <rect x="250" y="45" width="60" height="40" rx="6" fill="#3498db" opacity="0.85"/>
+  <rect x="360" y="45" width="60" height="40" rx="6" fill="#3498db" opacity="0.85"/>
+  <text x="60"  y="69" text-anchor="middle" font-size="11" fill="white">RNN</text>
+  <text x="170" y="69" text-anchor="middle" font-size="11" fill="white">RNN</text>
+  <text x="280" y="69" text-anchor="middle" font-size="11" fill="white">RNN</text>
+  <text x="390" y="69" text-anchor="middle" font-size="11" fill="white">RNN</text>
+  <!-- Hidden state arrows -->
+  <line x1="90" y1="65" x2="140" y2="65" stroke="#04AA6D" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="200" y1="65" x2="250" y2="65" stroke="#04AA6D" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="310" y1="65" x2="360" y2="65" stroke="#04AA6D" stroke-width="2" marker-end="url(#arr)"/>
+  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#04AA6D"/></marker></defs>
+  <!-- Inputs -->
+  <line x1="60"  y1="110" x2="60"  y2="85" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="170" y1="110" x2="170" y2="85" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="280" y1="110" x2="280" y2="85" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="390" y1="110" x2="390" y2="85" stroke="#aaa" stroke-width="1.5"/>
+  <text x="60"  y="122" text-anchor="middle" font-size="10" fill="#555">"The"</text>
+  <text x="170" y="122" text-anchor="middle" font-size="10" fill="#555">"cat"</text>
+  <text x="280" y="122" text-anchor="middle" font-size="10" fill="#555">"sat"</text>
+  <text x="390" y="122" text-anchor="middle" font-size="10" fill="#555">"on"</text>
+  <!-- Outputs -->
+  <line x1="60"  y1="45" x2="60"  y2="20" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="170" y1="45" x2="170" y2="20" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="280" y1="45" x2="280" y2="20" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="390" y1="45" x2="390" y2="20" stroke="#aaa" stroke-width="1.5"/>
+  <text x="60"  y="14" text-anchor="middle" font-size="10" fill="#9b59b6">h₁</text>
+  <text x="170" y="14" text-anchor="middle" font-size="10" fill="#9b59b6">h₂</text>
+  <text x="280" y="14" text-anchor="middle" font-size="10" fill="#9b59b6">h₃</text>
+  <text x="390" y="14" text-anchor="middle" font-size="10" fill="#9b59b6">h₄</text>
+  <text x="135" y="60" font-size="9" fill="#04AA6D">hidden state</text>
+</svg>
+</div>
+
+<h2>The Vanishing Gradient Problem</h2>
+<p>In long sequences (100+ steps), gradients shrink exponentially as they flow backwards through time — the network forgets events from many steps ago.</p>
+<div class="warn-box">⚠️ A plain RNN struggles to connect information that is many steps apart. For the sentence "I grew up in France... I speak fluent <em>French</em>", a plain RNN may forget "France" by the time it predicts "French".</div>
+
+<h2>LSTMs — Long Short-Term Memory</h2>
+<p><strong>LSTMs</strong> (1997, Hochreiter & Schmidhuber) solve this with a <em>cell state</em> — a conveyor belt that carries information across many timesteps, with three <em>gates</em> controlling what to remember and forget.</p>
+<ul>
+  <li><strong>Forget Gate</strong> — Decides what to erase from cell state</li>
+  <li><strong>Input Gate</strong> — Decides what new info to store</li>
+  <li><strong>Output Gate</strong> — Decides what to output as hidden state</li>
+</ul>
+
+<h2>GRUs — Gated Recurrent Units</h2>
+<p>A simpler version of LSTMs with only 2 gates (reset & update). Faster to train, nearly as powerful for most tasks.</p>
+
+<h2>RNN Applications</h2>
+<ul>
+  <li>Language modelling (predicting the next word)</li>
+  <li>Machine translation (before Transformers)</li>
+  <li>Speech recognition</li>
+  <li>Time-series forecasting (stock prices, weather)</li>
+  <li>Music generation</li>
+</ul>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What problem do LSTMs solve that plain RNNs struggle with?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Processing images efficiently</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Remembering long-range dependencies via the vanishing gradient problem</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Training on small datasets</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Running on mobile devices</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Transformers & Attention",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › Transformers</div>
+<h1>Transformers & Attention</h1>
+<p>The <strong>Transformer</strong> architecture (2017, "Attention Is All You Need") revolutionised AI. It replaced RNNs for NLP and is now the foundation of GPT, Claude, BERT, and almost every state-of-the-art model.</p>
+
+<h2>The Core Idea: Self-Attention</h2>
+<p><strong>Self-attention</strong> allows every word in a sentence to directly "attend to" every other word — capturing long-range relationships in a single step instead of step-by-step like RNNs.</p>
+<div class="info-box">📌 <strong>Example:</strong> In "The animal didn't cross the street because <em>it</em> was too tired", self-attention lets the model learn that "it" refers to "animal" — even though they're far apart.</div>
+
+<h2>How Attention Works</h2>
+<p>For each word, attention computes three vectors:</p>
+<div class="code-box"><span class="cm">// For each token:</span>
+<br>Q = Query  ("what am I looking for?")
+<br>K = Key    ("what do I contain?")
+<br>V = Value  ("what do I give if attended to?")
+<br>
+<br><span class="cm">// Attention score between word i and word j:</span>
+<br>score(i,j) = Q_i · K_j / sqrt(d_k)
+<br>
+<br><span class="cm">// Softmax over all scores → attention weights</span>
+<br>output_i = Σ attention_weight(i,j) × V_j</div>
+
+<h2>Multi-Head Attention</h2>
+<p>Instead of one attention computation, Transformers run <em>multiple attention heads</em> in parallel. Each head can attend to different types of relationships (syntax, coreference, semantics) simultaneously.</p>
+
+<h2>The Transformer Architecture</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:2;margin:16px 0;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div>
+    <strong style="font-size:13px">ENCODER</strong><br>
+    Input Tokens<br>
+    ↓ Embeddings + Positional Encoding<br>
+    ↓ Multi-Head Self-Attention<br>
+    ↓ Add & Layer Norm<br>
+    ↓ Feed-Forward Network<br>
+    ↓ Add & Layer Norm<br>
+    (×N layers)<br>
+    → Context Vectors
+  </div>
+  <div>
+    <strong style="font-size:13px">DECODER</strong><br>
+    Output Tokens (shifted)<br>
+    ↓ Masked Self-Attention<br>
+    ↓ Cross-Attention ← Encoder<br>
+    ↓ Feed-Forward Network<br>
+    ↓ Add & Layer Norm<br>
+    (×N layers)<br>
+    ↓ Linear + Softmax<br>
+    → Next Token Probabilities
+  </div>
+</div>
+
+<h2>Positional Encoding</h2>
+<p>Unlike RNNs, Transformers process all tokens at once (in parallel). Since there's no inherent order, <strong>positional encodings</strong> are added to embeddings to inject sequence position information.</p>
+
+<h2>Why Transformers Won</h2>
+<ul>
+  <li><strong>Parallelisable</strong> — Process all tokens simultaneously → much faster training</li>
+  <li><strong>Long-range dependencies</strong> — Any two tokens connect in O(1) steps</li>
+  <li><strong>Scalable</strong> — Performance keeps improving as you add parameters and data</li>
+  <li><strong>Transfer learning</strong> — Pre-train once on huge data, fine-tune on specific tasks</li>
+</ul>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What is the main advantage of self-attention over RNNs?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It uses fewer parameters</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Every token can directly attend to every other token, capturing long-range dependencies in one step</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It works better on image data</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It doesn't require training data</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Training Deep Networks",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › Training Deep Networks</div>
+<h1>Training Deep Networks</h1>
+<p>Training a deep neural network is more than just running gradient descent. Several key techniques make training stable, fast, and effective.</p>
+
+<h2>Batch Normalisation</h2>
+<p>Normalises the inputs to each layer to have zero mean and unit variance. This stabilises training, allows higher learning rates, and acts as a regulariser.</p>
+<div class="code-box"><span class="cm">// For a mini-batch of activations:</span>
+<br>μ = mean(batch)
+<br>σ² = variance(batch)
+<br>x̂ = (x - μ) / sqrt(σ² + ε)   <span class="cm">← normalise</span>
+<br>y = γ × x̂ + β               <span class="cm">← learnable scale & shift</span></div>
+
+<h2>Dropout</h2>
+<p>During training, randomly sets a fraction of neuron outputs to zero. Forces the network to learn redundant representations — the strongest regularisation technique for neural networks.</p>
+<div class="code-box"><span class="cm">// Dropout (p=0.5 means 50% of neurons zeroed)</span>
+<br>Layer output (training):  [1.2, 0, 3.1, 0, 0, 2.8, 0, 1.5]
+<br>Layer output (inference): [1.2, 0.9, 3.1, 1.4, 0.7, 2.8, 1.1, 1.5]
+<br><span class="cm">// Dropout is OFF at inference time!</span></div>
+
+<h2>Residual Connections (Skip Connections)</h2>
+<p>Introduced by ResNet (2015). Adds the input directly to the output of a block, allowing gradients to flow through unchanged — enabling networks with 100+ layers.</p>
+<div class="code-box"><span class="cm">// Standard block:</span>
+<br>output = F(x)
+<br>
+<br><span class="cm">// Residual block:</span>
+<br>output = F(x) + x    <span class="cm">← x is the "skip connection"</span></div>
+
+<h2>Learning Rate Scheduling</h2>
+<p>The learning rate doesn't have to be constant. Common schedules:</p>
+<ul>
+  <li><strong>Step Decay</strong> — Halve the LR every N epochs</li>
+  <li><strong>Cosine Annealing</strong> — LR follows a cosine curve to near-zero</li>
+  <li><strong>Warmup</strong> — Start with tiny LR, ramp up, then decay (used by Transformers)</li>
+  <li><strong>OneCycleLR</strong> — Fast, often best results in fewer epochs</li>
+</ul>
+
+<h2>Weight Initialisation</h2>
+<p>Starting with the right weight values prevents gradients from vanishing or exploding on the first pass.</p>
+<ul>
+  <li><strong>He Initialisation</strong> — Best for ReLU networks: weights ~ N(0, 2/n_in)</li>
+  <li><strong>Xavier/Glorot</strong> — Best for sigmoid/tanh: weights ~ N(0, 2/(n_in+n_out))</li>
+</ul>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>Training Loop Skeleton</span><button class="tryit-run" onclick="runTryit('dl6')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editordl6">// Typical PyTorch-style training loop (pseudocode)
+function trainEpoch(model, dataLoader, optimizer) {
+  model.train();  // enable dropout & batch norm
+  let totalLoss = 0;
+
+  for (const [X, y] of dataLoader) {
+    optimizer.zeroGrad();          // clear old gradients
+    const pred = model.forward(X); // forward pass
+    const loss = crossEntropy(pred, y); // compute loss
+    loss.backward();               // backprop
+    optimizer.step();              // update weights
+    totalLoss += loss.item();
+  }
+  return totalLoss / dataLoader.length;
+}
+
+console.log("Epoch 1 loss: 2.31");
+console.log("Epoch 5 loss: 1.05");
+console.log("Epoch 20 loss: 0.23");
+console.log("Epoch 50 loss: 0.08");</textarea>
+    <div class="tryit-output" id="outputdl6"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does Dropout do during training?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Removes layers from the network permanently</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Randomly zeros out neuron outputs to prevent overfitting</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Reduces the learning rate gradually</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Normalises the input data</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Transfer Learning",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › Transfer Learning</div>
+<h1>Transfer Learning</h1>
+<p><strong>Transfer Learning</strong> is the practice of taking a model trained on one large task and reusing it (or adapting it) for a different but related task. It's one of the most powerful and practical techniques in deep learning.</p>
+
+<div class="info-box">💡 <strong>Analogy:</strong> You don't re-learn to read when you pick up a new book. You transfer your reading skills. Similarly, a model pre-trained on millions of images already understands edges, shapes, and textures — you just teach it the new task on top.</div>
+
+<h2>Why Transfer Learning?</h2>
+<ul>
+  <li><strong>Less data needed</strong> — Fine-tuning needs 100s of examples vs millions</li>
+  <li><strong>Faster training</strong> — Hours instead of days/weeks</li>
+  <li><strong>Better accuracy</strong> — Pre-trained features are powerful starting points</li>
+  <li><strong>Less compute</strong> — No need for 8×A100 GPU clusters</li>
+</ul>
+
+<h2>How It Works</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+Pre-trained Model (e.g. ResNet trained on ImageNet)
+┌─────────────────────────────────────────┐
+│  Conv Layers  →  Rich feature extractor │  ← FREEZE these
+│  (knows edges, shapes, textures, etc.)  │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  New Classification Head (random init)  │  ← TRAIN these
+│  Dense → Dense → Softmax(n_classes)     │
+└─────────────────────────────────────────┘
+</pre>
+</div>
+
+<h2>Strategies</h2>
+<ul>
+  <li><strong>Feature Extraction</strong> — Freeze all pre-trained layers, only train the new head. Fast, works well when data is small and similar to original.</li>
+  <li><strong>Fine-Tuning</strong> — Unfreeze some or all layers, train everything with a small LR. More powerful when you have enough data.</li>
+  <li><strong>Full Retraining</strong> — Start from pre-trained weights and train everything. Best with large domain-specific datasets.</li>
+</ul>
+
+<h2>Famous Pre-trained Models</h2>
+<div style="overflow-x:auto;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+  <tr style="background:#282A35;color:#fff">
+    <th style="padding:10px 14px;text-align:left">Model</th><th style="padding:10px 14px;text-align:left">Domain</th><th style="padding:10px 14px;text-align:left">Pre-trained on</th>
+  </tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px;border-bottom:1px solid #eee">ResNet / EfficientNet</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Vision</td><td style="padding:10px 14px;border-bottom:1px solid #eee">ImageNet (1.2M images)</td></tr>
+  <tr><td style="padding:10px 14px;border-bottom:1px solid #eee">BERT</td><td style="padding:10px 14px;border-bottom:1px solid #eee">NLP</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Wikipedia + BooksCorpus</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px;border-bottom:1px solid #eee">GPT-4 / Claude</td><td style="padding:10px 14px;border-bottom:1px solid #eee">NLP</td><td style="padding:10px 14px;border-bottom:1px solid #eee">Trillions of web tokens</td></tr>
+  <tr><td style="padding:10px 14px">Whisper</td><td style="padding:10px 14px">Speech</td><td style="padding:10px 14px">680,000 hours of audio</td></tr>
+</table>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What is the main benefit of Transfer Learning?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It eliminates the need for any training data</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">It lets you achieve high accuracy with less data and compute by reusing pre-trained features</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It makes models smaller and faster at inference</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">It removes the need for activation functions</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Generative AI",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › Generative AI</div>
+<h1>Generative AI</h1>
+<p><strong>Generative AI</strong> refers to models that can <em>create</em> new content — images, text, audio, video, and code — that resembles human-created data.</p>
+
+<h2>Generative Adversarial Networks (GANs)</h2>
+<p>Introduced by Ian Goodfellow in 2014. Two networks compete in a game:</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+  <div style="background:#e8f5ee;border-radius:8px;padding:16px;border:1px solid #04AA6D;text-align:center">
+    <div style="font-size:28px">🎨</div>
+    <strong>Generator</strong><br>
+    <small>Takes random noise → produces fake images. Tries to fool the Discriminator.</small>
+  </div>
+  <div style="background:#fdf0f0;border-radius:8px;padding:16px;border:1px solid #e74c3c;text-align:center">
+    <div style="font-size:28px">🔍</div>
+    <strong>Discriminator</strong><br>
+    <small>Tells real from fake images. Tries to catch the Generator's fakes.</small>
+  </div>
+</div>
+<p>They improve each other: the Generator gets better at faking; the Discriminator gets better at detecting. At convergence, the Generator produces realistic images.</p>
+<p><strong>Applications:</strong> Face synthesis (StyleGAN), data augmentation, image-to-image translation (pix2pix), deepfakes.</p>
+
+<h2>Variational Autoencoders (VAEs)</h2>
+<p>VAEs learn a <em>compressed latent space</em> of the data distribution. You can sample from this space to generate new, similar data.</p>
+<div class="code-box">Input → <span class="fn">Encoder</span> → Latent z ~ N(μ, σ) → <span class="fn">Decoder</span> → Reconstruction
+<br>
+<br><span class="cm">// Interpolate in latent space:</span>
+<br>z = 0.5×z_cat + 0.5×z_dog → generates a "cat-dog"</div>
+
+<h2>Diffusion Models</h2>
+<p>The current state-of-the-art for image generation (DALL-E 2, Stable Diffusion, Midjourney). They learn to <em>reverse</em> a gradual noising process:</p>
+<ol>
+  <li><strong>Forward process:</strong> Gradually add Gaussian noise to a real image until it's pure noise</li>
+  <li><strong>Reverse process:</strong> Train a network to denoise step-by-step</li>
+  <li><strong>Generation:</strong> Start from pure noise, denoise 1000 steps → photo</li>
+</ol>
+<div class="info-box">🖼️ <strong>Text-to-Image:</strong> A text encoder (CLIP) guides the denoising towards images matching the text prompt. This is how "a astronaut riding a horse on Mars" becomes a photorealistic image.</div>
+
+<h2>Large Language Models (LLMs)</h2>
+<p>GPT, Claude, LLaMA — trained to predict the next token. Given enough data and parameters, this simple objective leads to models that can reason, code, and converse.</p>
+<div class="code-box"><span class="cm">// Next-token prediction (autoregressive generation)</span>
+<br>"The capital of France is" → model predicts → "Paris"
+<br>"Paris" → model predicts → "."
+<br>
+<br><span class="cm">// Repeat until end-of-sequence token</span></div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ In a GAN, what is the Generator's goal?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To distinguish real images from fake ones</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">To produce fake data realistic enough to fool the Discriminator</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To compress images into a latent space</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To classify images into categories</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Deep Learning in Practice",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Deep Learning › In Practice</div>
+<h1>Deep Learning in Practice</h1>
+<p>Knowing the theory is one thing — building and deploying real deep learning systems is another. This final lesson covers the tools, workflows, and practical wisdom used by ML engineers every day.</p>
+
+<h2>Essential Frameworks</h2>
+<ul>
+  <li><strong>PyTorch</strong> — Most popular in research; dynamic computation graph; Pythonic</li>
+  <li><strong>TensorFlow / Keras</strong> — Strong production tooling, TensorFlow Lite for mobile</li>
+  <li><strong>JAX</strong> — Google's functional ML framework; fastest for large-scale training</li>
+  <li><strong>Hugging Face</strong> — Library + hub for 300,000+ pre-trained models</li>
+</ul>
+
+<h2>A Real Deep Learning Workflow</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+1. Define the Problem     → What are inputs/outputs? What metric matters?
+2. Collect & Label Data   → Quality >>> quantity
+3. Explore Data (EDA)     → Distributions, class balance, outliers
+4. Choose Architecture    → CNN? Transformer? Start with a pre-trained model
+5. Establish a Baseline   → Simple model first (logistic regression, ResNet-18)
+6. Train & Monitor        → Loss curves, validation accuracy, wandb/tensorboard
+7. Debug                  → Overfit one batch first (sanity check)
+8. Regularise             → Dropout, weight decay, data augmentation
+9. Hyperparameter Tune    → LR, batch size, architecture depth
+10. Evaluate on Test Set  → Once. Only once.
+11. Deploy                → ONNX, TorchScript, FastAPI, Docker
+12. Monitor in Production → Data drift, latency, accuracy degradation
+</pre>
+</div>
+
+<h2>Debugging Tips</h2>
+<div class="warn-box">⚠️ <strong>First thing to try:</strong> Overfit a single batch. If loss doesn't go near zero, there's a bug in your model or loss function — not a data problem.</div>
+<ul>
+  <li>Plot loss curves — training loss should always decrease</li>
+  <li>Check for NaN losses (symptom: exploding gradients → add gradient clipping)</li>
+  <li>Verify data pipeline: print shapes, visualise samples before training</li>
+  <li>Use a smaller model first and scale up</li>
+  <li>Learning rate is the most important hyperparameter — try 3e-4 first</li>
+</ul>
+
+<h2>Hardware</h2>
+<ul>
+  <li><strong>CPU</strong> — Inference for small models; data preprocessing</li>
+  <li><strong>GPU (NVIDIA)</strong> — Standard for training; CUDA ecosystem</li>
+  <li><strong>TPU</strong> — Google's custom chips; fastest for large Transformers</li>
+  <li><strong>Cloud</strong> — AWS (p4d), GCP (A100), RunPod, Lambda Labs for renting GPUs</li>
+</ul>
+
+<h2>Free Resources to Keep Learning</h2>
+<ul>
+  <li><strong>fast.ai</strong> — Best practical deep learning course (free)</li>
+  <li><strong>PyTorch Tutorials</strong> — pytorch.org/tutorials</li>
+  <li><strong>Papers With Code</strong> — State-of-the-art results + code</li>
+  <li><strong>Hugging Face Course</strong> — Transformers & NLP (free)</li>
+  <li><strong>Andrej Karpathy's YouTube</strong> — Deep intuition on LLMs</li>
+</ul>
+
+<div class="info-box">🎓 <strong>Congratulations — you've completed all three courses!</strong><br><br>
+You've gone from "What is AI?" all the way to training deep networks, building CNNs, understanding Transformers, and deploying real systems.<br><br>
+<strong>Your next step:</strong> Build something. Pick a dataset on Kaggle, load a pre-trained model from Hugging Face, and fine-tune it on your own problem. That's where the real learning happens.
+</div>
+
+<h2>Final Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What should you do FIRST when debugging a deep learning model?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Collect more training data</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Switch to a different framework</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Try to overfit a single batch to verify the model and loss work correctly</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Increase the learning rate</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  }
+];
+
 let currentLesson = 0;
+let activeCourse = 'ai';
+
+const courseConfig = {
+  ai: { lessons: lessons,   title: 'AI Basics' },
+  ml: { lessons: mlLessons, title: 'Machine Learning' },
+  dl: { lessons: dlLessons, title: 'Deep Learning' }
+};
 
 function showHome() {
   document.getElementById('homePage').style.display = '';
   document.getElementById('coursePage').style.display = 'none';
 }
 
-function showCourse(start) {
+function showCourse(course) {
+  activeCourse = course || 'ai';
   document.getElementById('homePage').style.display = 'none';
   document.getElementById('coursePage').style.display = '';
+
+  // Build sidebar for active course
+  const cfg = courseConfig[activeCourse];
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.innerHTML = `<div class="sidebar-section"><h3>${cfg.title}</h3>${
+    cfg.lessons.map((l,i) => `<a href="#" onclick="showLesson(${i})" id="${activeCourse}nav${i}">${i+1}. ${l.title}</a>`).join('')
+  }</div>`;
+
   showLesson(0);
 }
 
 function showLesson(idx) {
   currentLesson = idx;
-  const lesson = lessons[idx];
+  const cfg = courseConfig[activeCourse];
+  const lesson = cfg.lessons[idx];
 
-  // Update sidebar active state
   document.querySelectorAll('.sidebar a').forEach((a, i) => {
     a.classList.toggle('active', i === idx);
   });
 
-  // Update progress
-  const pct = Math.round(((idx + 1) / lessons.length) * 100);
+  const pct = Math.round(((idx + 1) / cfg.lessons.length) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressLabel').textContent = `Progress: Lesson ${idx + 1} of ${lessons.length} — ${pct}%`;
+  document.getElementById('progressLabel').textContent = `Progress: Lesson ${idx + 1} of ${cfg.lessons.length} — ${pct}% | ${cfg.title}`;
 
-  // Render lesson
   const container = document.getElementById('lessonContent');
   container.innerHTML = lesson.content + buildNav(idx);
   container.scrollTop = 0;
@@ -1000,8 +2806,13 @@ function showLesson(idx) {
 }
 
 function buildNav(idx) {
-  const prev = idx > 0 ? `<button class="nav-btn prev" onclick="showLesson(${idx-1})">← ${lessons[idx-1].title}</button>` : `<span></span>`;
-  const next = idx < lessons.length - 1 ? `<button class="nav-btn" onclick="showLesson(${idx+1})">Next: ${lessons[idx+1].title} →</button>` : `<button class="nav-btn" onclick="showHome()">🏠 Back to Home</button>`;
+  const cfg = courseConfig[activeCourse];
+  const prev = idx > 0
+    ? `<button class="nav-btn prev" onclick="showLesson(${idx-1})">← ${cfg.lessons[idx-1].title}</button>`
+    : `<span></span>`;
+  const next = idx < cfg.lessons.length - 1
+    ? `<button class="nav-btn" onclick="showLesson(${idx+1})">Next: ${cfg.lessons[idx+1].title} →</button>`
+    : `<button class="nav-btn" onclick="showHome()">🏠 Back to Home</button>`;
   return `<div class="lesson-nav">${prev}${next}</div>`;
 }
 
@@ -1020,7 +2831,6 @@ function checkQuiz(el, correct) {
   } else {
     fb.style.color = '#922b21';
     fb.textContent = '❌ Not quite — try reading the lesson again.';
-    // Highlight correct answer
     parent.querySelectorAll('.quiz-option').forEach(o => {
       if (o.getAttribute('onclick').includes('true')) o.classList.add('correct');
     });
@@ -1028,18 +2838,203 @@ function checkQuiz(el, correct) {
 }
 
 const tryitOutputs = {
-  0: `Traditional: true\nAI model: learns from data, adapts automatically`,
-  3: `Model accuracy: 94%\nPrediction for 3-bed house: $385000`,
-  5: `😊 Positive\n😞 Negative\n😐 Neutral`
+  0:     `Traditional: true\nAI model: learns from data, adapts automatically`,
+  3:     `Model accuracy: 94%\nPrediction for 3-bed house: $385000`,
+  5:     `😊 Positive\n😞 Negative\n😐 Neutral`,
+  ml0:   `1 hour: Fail ❌\n3 hours: Pass ✅\n6 hours: Pass ✅`,
+  ml2:   `{"age_norm":"0.00","salary":50000}\n{"age_norm":"0.35","salary":60000}\n{"age_norm":"0.17","salary":55000}\n{"age_norm":"1.00","salary":90000}\n{"age_norm":"-0.13","salary":45000}`,
+  ml3:   `Slope (m): 2466.67 $/m²\nIntercept (b): $26667\nPrediction 90m²: $248667\nPrediction 200m²: $519999`,
+  ml4:   `prob=8.2% → FAIL ❌\nprob=62.2% → PASS ✅\nprob=98.9% → PASS ✅`,
+  ml7:   `Centroid 1: 1.5\nCentroid 2: 8.75\nGroup A: [1, 1.5, 2]\nGroup B: [8, 8.5, 9, 9.5]`,
+  dl1:   `x     ReLU  Sigmoid  Tanh\n───────────────────────────────────\n-3     0.00  0.05     -0.99\n-1     0.00  0.27     -0.76\n0      0.00  0.50      0.00\n1      1.00  0.73      0.76\n3      3.00  0.95      0.99`,
+  dl6:   `Epoch 1 loss: 2.31\nEpoch 5 loss: 1.05\nEpoch 20 loss: 0.23\nEpoch 50 loss: 0.08`
 };
+
+// ── SIGNUP ──────────────────────────────────────────────────────────────────
+function openSignup() {
+  document.getElementById('signupForm').style.display = '';
+  document.getElementById('signupSuccess').style.display = 'none';
+  document.getElementById('su_error').style.display = 'none';
+  document.getElementById('signupModal').classList.add('open');
+}
+function closeSignup() {
+  document.getElementById('signupModal').classList.remove('open');
+}
+function closeSignupOnBg(e) {
+  if (e.target === document.getElementById('signupModal')) closeSignup();
+}
+async function handleSignup() {
+  const fname  = document.getElementById('su_fname').value.trim();
+  const lname  = document.getElementById('su_lname').value.trim();
+  const email  = document.getElementById('su_email').value.trim();
+  const phone  = document.getElementById('su_phone').value.trim();
+  const role   = document.getElementById('su_role').value;
+  const course = document.getElementById('su_course').value;
+  const err    = document.getElementById('su_error');
+  const btn    = document.querySelector('.btn-submit');
+
+  if (!fname || !lname) { showErr(err, 'Please enter your first and last name.'); return; }
+  if (!email || !email.includes('@')) { showErr(err, 'Please enter a valid email address.'); return; }
+  err.style.display = 'none';
+
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    await window.saveSignupToFirebase({ fname, lname, email, phone, role, course });
+
+    ['su_fname','su_lname','su_email','su_phone'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('su_role').value = '';
+    document.getElementById('su_course').value = '';
+
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('signupSuccess').style.display = 'block';
+  } catch(e) {
+    showErr(err, 'Something went wrong. Please try again.');
+  } finally {
+    btn.textContent = 'Create Free Account →';
+    btn.disabled = false;
+  }
+}
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+// ── ADMIN ────────────────────────────────────────────────────────────────────
+let adminSignups = [];
+
+async function openAdmin() {
+  if (!window.getAdminUser || !window.getAdminUser()) {
+    openAdminLogin(); return;
+  }
+  const user = window.getAdminUser();
+  document.getElementById('adminUserEmail').textContent = user.email;
+  document.getElementById('adminPanel').style.display = 'block';
+  document.getElementById('signupsBody').innerHTML =
+    '<tr><td colspan="8" style="text-align:center;padding:30px;color:#aaa">Loading...</td></tr>';
+
+  try {
+    adminSignups = await window.loadSignupsFromFirebase();
+    renderAdminTable();
+  } catch(e) {
+    document.getElementById('signupsBody').innerHTML =
+      '<tr><td colspan="8" style="text-align:center;padding:30px;color:#e74c3c">Failed to load. Check Firestore rules.</td></tr>';
+  }
+}
+
+function renderAdminTable() {
+  const tbody = document.getElementById('signupsBody');
+  document.getElementById('adminCount').textContent = adminSignups.length + ' signup(s) in Firestore.';
+
+  if (!adminSignups.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#aaa">No signups yet.</td></tr>';
+    return;
+  }
+
+  // Sort newest first
+  const sorted = [...adminSignups].sort((a, b) => {
+    const ta = a.createdAt?.seconds || 0;
+    const tb = b.createdAt?.seconds || 0;
+    return tb - ta;
+  });
+
+  tbody.innerHTML = sorted.map((s, i) => {
+    const date = s.createdAt?.seconds
+      ? new Date(s.createdAt.seconds * 1000).toLocaleString()
+      : '—';
+    return `<tr>
+      <td>${i+1}</td><td>${s.fname}</td><td>${s.lname}</td>
+      <td>${s.email}</td><td>${s.phone||'—'}</td>
+      <td>${s.role||'—'}</td><td>${s.course||'—'}</td><td>${date}</td>
+    </tr>`;
+  }).join('');
+}
+
+function closeAdmin() { document.getElementById('adminPanel').style.display = 'none'; }
+
+async function clearSignups() {
+  if (!confirm('Delete ALL signups from Firestore? This cannot be undone.')) return;
+  try {
+    await window.clearAllSignupsFromFirebase();
+    adminSignups = [];
+    renderAdminTable();
+  } catch(e) { alert('Failed to delete. Check permissions.'); }
+}
+
+function exportCSV() {
+  if (!adminSignups.length) { alert('No signups to export.'); return; }
+  const header = ['#','First Name','Last Name','Email','Phone','Role','Course','Date'];
+  const rows = adminSignups.map((s, i) => {
+    const date = s.createdAt?.seconds ? new Date(s.createdAt.seconds * 1000).toLocaleString() : '';
+    return [i+1, s.fname, s.lname, s.email, s.phone||'', s.role||'', s.course||'', date];
+  });
+  const csv = [header, ...rows].map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ai_schools_signups.csv';
+  a.click();
+}
+
+// ── ADMIN AUTH ───────────────────────────────────────────────────────────────
+function openAdminLogin() {
+  document.getElementById('admin_email').value = '';
+  document.getElementById('admin_password').value = '';
+  document.getElementById('adminLoginError').style.display = 'none';
+  document.getElementById('adminLoginModal').classList.add('open');
+  setTimeout(() => document.getElementById('admin_email').focus(), 100);
+}
+function closeAdminLogin() {
+  document.getElementById('adminLoginModal').classList.remove('open');
+}
+function closeAdminLoginOnBg(e) {
+  if (e.target === document.getElementById('adminLoginModal')) closeAdminLogin();
+}
+async function handleAdminLogin() {
+  const email    = document.getElementById('admin_email').value.trim();
+  const password = document.getElementById('admin_password').value;
+  const errEl    = document.getElementById('adminLoginError');
+  const btn      = document.getElementById('adminLoginBtn');
+
+  if (!email || !password) {
+    showErr(errEl, 'Please enter your email and password.'); return;
+  }
+  errEl.style.display = 'none';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+
+  try {
+    await window.firebaseLogin(email, password);
+    closeAdminLogin();
+    openAdmin();
+  } catch(e) {
+    const msg = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password'
+      ? 'Incorrect email or password.'
+      : e.code === 'auth/too-many-requests'
+      ? 'Too many attempts. Try again later.'
+      : 'Login failed. Check your credentials.';
+    showErr(errEl, msg);
+  } finally {
+    btn.textContent = 'Sign In →';
+    btn.disabled = false;
+  }
+}
+async function adminLogout() {
+  if (!confirm('Sign out of admin?')) return;
+  await window.firebaseLogout();
+  closeAdmin();
+}
+
+// Shift+A → open login if not authed, open panel if authed
+document.addEventListener('keydown', e => {
+  if (e.shiftKey && e.key === 'A') {
+    window.getAdminUser && window.getAdminUser() ? openAdmin() : openAdminLogin();
+  }
+});
 
 function runTryit(id) {
   const out = document.getElementById('output' + id);
   if (!out) return;
-  if (tryitOutputs[id]) {
+  if (tryitOutputs[id] !== undefined) {
     out.innerHTML = tryitOutputs[id].split('\n').map(l => `<div>${l}</div>`).join('');
   } else {
-    const code = document.getElementById('editor' + id).value;
     out.innerHTML = '<em style="color:#888">Output: (Interactive output coming soon)</em>';
   }
 }
