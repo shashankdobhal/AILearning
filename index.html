@@ -3947,8 +3947,8 @@ function renderChoice(ex, i, tab, cardClass, isDone) {
       return "<label class='quiz-option " + cls + "' style='" + (isDone ? 'pointer-events:none' : '') + "' " +
         "onclick='checkChoice(\"" + tab + "\"," + i + "," + oi + ")'>" + opt + "</label>";
     }).join('') +
-    "<div class='ex-feedback " + (answered === ex.answer ? 'correct' : 'wrong') + "' style='" + (isDone ? 'display:block' : 'display:none') + "'>" +
-    (answered === ex.answer ? '✅ Correct!' : '❌ The correct answer is: ' + ex.options[ex.answer]) +
+    "<div class='ex-feedback " + (answered === true ? 'correct' : 'wrong') + "' style='" + (isDone ? 'display:block' : 'display:none') + "'>" +
+    (answered === true ? '✅ Correct!' : '❌ The correct answer is: ' + ex.options[ex.answer]) +
     "</div></div>";
 }
 
