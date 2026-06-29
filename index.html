@@ -87,6 +87,29 @@
     color: #ccc; text-decoration: none; margin-left: 20px; font-size: 14px;
   }
   .topbar nav a:hover { color: #fff; }
+
+  /* Courses dropdown */
+  .nav-dropdown { position: relative; display: inline-block; margin-left: 20px; }
+  .nav-dropdown > span {
+    color: #ccc; font-size: 14px; cursor: pointer; user-select: none;
+  }
+  .nav-dropdown > span:hover { color: #fff; }
+  .nav-dropdown > span::after { content: ' ▾'; font-size: 11px; }
+  .dropdown-menu {
+    display: none; position: absolute; top: calc(100% + 12px); left: 0;
+    background: #1e2030; border: 1px solid #3a3d50; border-radius: 8px;
+    min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 1001;
+    overflow: hidden;
+  }
+  .nav-dropdown:hover .dropdown-menu { display: block; }
+  .dropdown-menu a {
+    display: flex; align-items: center; gap: 10px; padding: 11px 16px;
+    color: #ccc; text-decoration: none; font-size: 14px; margin: 0;
+    transition: background 0.1s;
+  }
+  .dropdown-menu a:hover { background: #2a2d40; color: #fff; }
+  .dropdown-menu a .di { font-size: 18px; }
+  .dropdown-divider { border: none; border-top: 1px solid #3a3d50; margin: 4px 0; }
   .btn-green {
     background: #04AA6D; color: #fff; border: none; padding: 8px 18px;
     border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600;
@@ -347,11 +370,20 @@
 <div class="topbar">
   <div class="logo" onclick="showHome()" style="cursor:pointer">AI Schools</div>
   <nav>
-    <a href="#" onclick="showHome()">Home</a>
-    <a href="#" onclick="showCourse('intro')">Courses</a>
-    <a href="#" onclick="alert('Coming soon!')">References</a>
-    <a href="#" onclick="alert('Coming soon!')">Exercises</a>
-    <a href="#" class="btn-green" style="margin-left:20px" onclick="openSignup(); return false;">Sign Up Free</a>
+    <a href="javascript:void(0)" onclick="showHome()">Home</a>
+    <div class="nav-dropdown">
+      <span>Courses</span>
+      <div class="dropdown-menu">
+        <a href="javascript:void(0)" onclick="showCourse('ai')"><span class="di">🤖</span> AI Basics</a>
+        <a href="javascript:void(0)" onclick="showCourse('ml')"><span class="di">🧠</span> Machine Learning</a>
+        <a href="javascript:void(0)" onclick="showCourse('dl')"><span class="di">🔬</span> Deep Learning</a>
+        <hr class="dropdown-divider">
+        <a href="javascript:void(0)" onclick="showCourse('git')"><span class="di">🌿</span> Git Basics</a>
+      </div>
+    </div>
+    <a href="javascript:void(0)" onclick="alert('Coming soon!')">References</a>
+    <a href="javascript:void(0)" onclick="alert('Coming soon!')">Exercises</a>
+    <a href="javascript:void(0)" class="btn-green" style="margin-left:20px" onclick="openSignup()">Sign Up Free</a>
     <span id="adminIndicator" onclick="openAdmin()">🔒 Admin</span>
   </nav>
 </div>
@@ -3496,6 +3528,12 @@ const courseConfig = {
 function showHome() {
   document.getElementById('homePage').style.display = '';
   document.getElementById('coursePage').style.display = 'none';
+  window.scrollTo(0, 0);
+}
+
+function scrollToCourses() {
+  showHome();
+  setTimeout(() => document.querySelector('.courses-strip').scrollIntoView({ behavior: 'smooth' }), 50);
 }
 
 function showCourse(course) {
