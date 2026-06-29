@@ -496,6 +496,12 @@
         <p>Neural networks, CNNs, RNNs, transformers and more.</p>
         <span class="badge">10 Lessons</span>
       </a>
+      <a class="course-card" onclick="showCourse('git')">
+        <div class="icon">🌿</div>
+        <h3>Git Basics</h3>
+        <p>Version control from scratch — commits, branches, merging and GitHub.</p>
+        <span class="badge">10 Lessons</span>
+      </a>
     </div>
   </div>
 
@@ -2757,13 +2763,734 @@ You've gone from "What is AI?" all the way to training deep networks, building C
   }
 ];
 
+const gitLessons = [
+  {
+    title: "What is Git?",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › <a onclick="void(0)">Git Basics</a> › What is Git?</div>
+<h1>What is Git?</h1>
+<p><strong>Git</strong> is the world's most popular <em>version control system</em>. It tracks changes to your files over time so you can recall specific versions later, collaborate with others, and never lose work again.</p>
+
+<div class="info-box">💡 <strong>Simple analogy:</strong> Git is like a time machine for your code. Every time you save a snapshot (commit), you can travel back to any point in history.</div>
+
+<h2>Why Do You Need Git?</h2>
+<ul>
+  <li><strong>Undo mistakes</strong> — Broke something? Roll back to a working version instantly</li>
+  <li><strong>Collaboration</strong> — Multiple developers work on the same codebase without overwriting each other</li>
+  <li><strong>History</strong> — See exactly what changed, when, and who changed it</li>
+  <li><strong>Branching</strong> — Experiment safely without touching the working code</li>
+  <li><strong>Backup</strong> — Push to GitHub and your code is safe in the cloud</li>
+</ul>
+
+<h2>Git vs GitHub</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+  <div style="background:#e8f5ee;border-radius:8px;padding:16px;border:1px solid #04AA6D;text-align:center">
+    <div style="font-size:32px">🌿</div>
+    <strong>Git</strong><br>
+    <small>A tool installed on your computer. Tracks changes locally.</small>
+  </div>
+  <div style="background:#e8f0ff;border-radius:8px;padding:16px;border:1px solid #3498db;text-align:center">
+    <div style="font-size:32px">🐙</div>
+    <strong>GitHub</strong><br>
+    <small>A website that hosts Git repositories in the cloud for sharing and collaboration.</small>
+  </div>
+</div>
+<p>Git is the tool. GitHub is the platform. You can use Git without GitHub, but you need Git to use GitHub.</p>
+
+<h2>How Git Stores History</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+Commit A  →  Commit B  →  Commit C  →  Commit D (latest)
+"Init"       "Add login"   "Fix bug"    "Add dashboard"
+
+← You can travel back to any of these snapshots →
+</pre>
+</div>
+
+<h2>Installing Git</h2>
+<div class="code-box"><span class="cm"># macOS (comes pre-installed, or via Homebrew)</span>
+<br>brew install git
+<br>
+<br><span class="cm"># Windows — download from git-scm.com</span>
+<br><span class="cm"># Linux (Ubuntu/Debian)</span>
+<br>sudo apt install git
+<br>
+<br><span class="cm"># Verify installation</span>
+<br>git --version</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What is the main purpose of Git?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To write code faster</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">To track changes to files over time and enable collaboration</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To host websites on the internet</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To compile and run code</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Setting Up Git",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Setting Up Git</div>
+<h1>Setting Up Git</h1>
+<p>Before using Git, you need to tell it who you are. This identity is attached to every commit you make.</p>
+
+<h2>First-Time Configuration</h2>
+<div class="code-box"><span class="cm"># Set your name and email (used in every commit)</span>
+<br>git config --global user.name "Your Name"
+<br>git config --global user.email "you@example.com"
+<br>
+<br><span class="cm"># Set default branch name to "main"</span>
+<br>git config --global init.defaultBranch main
+<br>
+<br><span class="cm"># Set your preferred editor (VS Code shown)</span>
+<br>git config --global core.editor "code --wait"
+<br>
+<br><span class="cm"># View all your settings</span>
+<br>git config --list</div>
+
+<div class="info-box">📌 <strong>--global</strong> means this setting applies to all Git repos on your machine. Omit it to set config just for one repo.</div>
+
+<h2>Initialising a Repository</h2>
+<p>A <strong>repository (repo)</strong> is a folder tracked by Git. You create one with <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">git init</code>.</p>
+<div class="code-box"><span class="cm"># Create a new project folder and initialise Git</span>
+<br>mkdir my-project
+<br>cd my-project
+<br>git init
+<br>
+<br><span class="cm"># Output:</span>
+<br>Initialized empty Git repository in /my-project/.git/</div>
+
+<p>This creates a hidden <strong>.git</strong> folder inside your project — that's where Git stores all its history. Never delete it manually.</p>
+
+<h2>Cloning an Existing Repo</h2>
+<p>If a project already exists on GitHub, use <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">git clone</code> instead of <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">git init</code>.</p>
+<div class="code-box"><span class="cm"># Clone a repo from GitHub to your machine</span>
+<br>git clone https://github.com/username/repo-name.git
+<br>
+<br><span class="cm"># This creates a folder called "repo-name" with all the code and history</span></div>
+
+<h2>The .gitignore File</h2>
+<p>Some files should <em>never</em> be tracked by Git — passwords, API keys, node_modules, build artifacts. List them in a <strong>.gitignore</strong> file.</p>
+<div class="code-box"><span class="cm"># .gitignore example</span>
+<br>node_modules/
+<br>.env
+<br>*.log
+<br>dist/
+<br>.DS_Store</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does <code>git init</code> do?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Installs Git on your computer</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Downloads a repo from GitHub</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Creates a new empty Git repository in the current folder</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Pushes your code to GitHub</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Staging & Committing",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Staging & Committing</div>
+<h1>Staging & Committing</h1>
+<p>The Git workflow has three areas you need to understand: the <strong>working directory</strong>, the <strong>staging area</strong>, and the <strong>repository</strong>.</p>
+
+<h2>The Three Areas</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0;text-align:center">
+<svg viewBox="0 0 500 100" xmlns="http://www.w3.org/2000/svg" style="max-width:500px;width:100%">
+  <rect x="10"  y="20" width="130" height="60" rx="8" fill="#fff3cd" stroke="#ffc107" stroke-width="2"/>
+  <rect x="185" y="20" width="130" height="60" rx="8" fill="#d0eaff" stroke="#3498db" stroke-width="2"/>
+  <rect x="360" y="20" width="130" height="60" rx="8" fill="#e8f5ee" stroke="#04AA6D" stroke-width="2"/>
+  <text x="75"  y="47" text-anchor="middle" font-size="12" font-weight="bold" fill="#7d5a00">Working</text>
+  <text x="75"  y="63" text-anchor="middle" font-size="12" fill="#7d5a00">Directory</text>
+  <text x="250" y="47" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a5276">Staging</text>
+  <text x="250" y="63" text-anchor="middle" font-size="12" fill="#1a5276">Area</text>
+  <text x="425" y="47" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e8449">Repository</text>
+  <text x="425" y="63" text-anchor="middle" font-size="12" fill="#1e8449">(.git)</text>
+  <line x1="140" y1="50" x2="183" y2="50" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="315" y1="50" x2="358" y2="50" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <defs><marker id="a" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>
+  <text x="161" y="42" text-anchor="middle" font-size="9" fill="#555">git add</text>
+  <text x="336" y="42" text-anchor="middle" font-size="9" fill="#555">git commit</text>
+</svg>
+</div>
+
+<ul>
+  <li><strong>Working Directory</strong> — Files you're currently editing</li>
+  <li><strong>Staging Area (Index)</strong> — Files you've marked to include in the next commit</li>
+  <li><strong>Repository</strong> — Permanent history of all commits</li>
+</ul>
+
+<h2>Checking Status</h2>
+<div class="code-box"><span class="cm"># See what's changed and what's staged</span>
+<br>git status
+<br>
+<br><span class="cm"># Output:</span>
+<br>Changes not staged for commit:
+<br>  modified:   index.html
+<br>
+<br>Untracked files:
+<br>  style.css</div>
+
+<h2>Staging Files</h2>
+<div class="code-box"><span class="cm"># Stage a specific file</span>
+<br>git add index.html
+<br>
+<br><span class="cm"># Stage multiple files</span>
+<br>git add index.html style.css
+<br>
+<br><span class="cm"># Stage ALL changed files</span>
+<br>git add .
+<br>
+<br><span class="cm"># Unstage a file (keep the changes, just remove from staging)</span>
+<br>git restore --staged index.html</div>
+
+<h2>Committing</h2>
+<div class="code-box"><span class="cm"># Commit staged files with a message</span>
+<br>git commit -m "Add navigation bar to homepage"
+<br>
+<br><span class="cm"># Stage + commit all tracked files in one step</span>
+<br>git commit -am "Fix typo in header"</div>
+
+<h2>Writing Good Commit Messages</h2>
+<div class="info-box">✅ <strong>Good:</strong> "Add user login page with email validation"<br>
+✅ <strong>Good:</strong> "Fix crash when cart is empty on checkout"<br>
+❌ <strong>Bad:</strong> "stuff"<br>
+❌ <strong>Bad:</strong> "fix"<br>
+❌ <strong>Bad:</strong> "WIP"</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does <code>git add</code> do?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Permanently saves changes to the repository</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Moves changes to the staging area, ready to be committed</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Uploads files to GitHub</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Creates a new branch</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Viewing History",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Viewing History</div>
+<h1>Viewing History</h1>
+<p>One of Git's superpowers is its complete, browsable history of every change ever made to your project.</p>
+
+<h2>git log — The History Command</h2>
+<div class="code-box"><span class="cm"># Full log</span>
+<br>git log
+<br>
+<br><span class="cm"># Output:</span>
+<br>commit a3f8c2d (HEAD -> main)
+<br>Author: Jane Doe &lt;jane@example.com&gt;
+<br>Date:   Mon Jun 23 10:42:00 2025
+<br>
+<br>    Add dashboard page
+<br>
+<br>commit 7b1e4a9
+<br>Author: Jane Doe &lt;jane@example.com&gt;
+<br>Date:   Sun Jun 22 09:15:00 2025
+<br>
+<br>    Fix login bug</div>
+
+<h2>Useful log Variations</h2>
+<div class="code-box"><span class="cm"># Compact one-line per commit</span>
+<br>git log --oneline
+<br>
+<br><span class="cm"># Output:</span>
+<br>a3f8c2d Add dashboard page
+<br>7b1e4a9 Fix login bug
+<br>3c2d1f0 Add login page
+<br>e1a9b8c Initial commit
+<br>
+<br><span class="cm"># Show a visual branch graph</span>
+<br>git log --oneline --graph --all
+<br>
+<br><span class="cm"># Show last 5 commits</span>
+<br>git log -5
+<br>
+<br><span class="cm"># Show commits by a specific author</span>
+<br>git log --author="Jane"</div>
+
+<h2>Seeing What Changed</h2>
+<div class="code-box"><span class="cm"># See unstaged changes (working dir vs last commit)</span>
+<br>git diff
+<br>
+<br><span class="cm"># See staged changes (what will go into next commit)</span>
+<br>git diff --staged
+<br>
+<br><span class="cm"># See changes in a specific commit</span>
+<br>git show a3f8c2d
+<br>
+<br><span class="cm"># See what changed between two commits</span>
+<br>git diff 7b1e4a9 a3f8c2d</div>
+
+<h2>Finding Who Changed a Line — git blame</h2>
+<div class="code-box"><span class="cm"># Show who last modified each line of a file</span>
+<br>git blame index.html
+<br>
+<br><span class="cm"># Output (each line shows commit hash, author, date):</span>
+<br>a3f8c2d (Jane  2025-06-23) &lt;h1&gt;Welcome&lt;/h1&gt;
+<br>7b1e4a9 (John  2025-06-22) &lt;nav&gt;...&lt;/nav&gt;</div>
+
+<div class="info-box">🔍 <strong>git blame</strong> is invaluable for understanding why a line of code exists — pair it with git show to read the full commit message.</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ Which command shows a compact one-line summary of each commit?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git status</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git diff</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">git log --oneline</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git show</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Branching",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Branching</div>
+<h1>Branching</h1>
+<p><strong>Branches</strong> let you work on new features or fixes in isolation, without affecting the main codebase. They are one of Git's most powerful features.</p>
+
+<h2>What is a Branch?</h2>
+<p>Think of branches like parallel universes. You can experiment in one branch, and the main branch stays untouched until you're ready to merge.</p>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+main:    A ── B ── C ────────────── G
+                    \              /
+feature:             D ── E ── F ──
+</pre>
+</div>
+
+<h2>Branch Commands</h2>
+<div class="code-box"><span class="cm"># List all branches (* = current branch)</span>
+<br>git branch
+<br>
+<br><span class="cm"># Create a new branch</span>
+<br>git branch feature/login
+<br>
+<br><span class="cm"># Switch to a branch</span>
+<br>git checkout feature/login
+<br>
+<br><span class="cm"># Create AND switch in one command (modern way)</span>
+<br>git switch -c feature/login
+<br>
+<br><span class="cm"># Switch back to main</span>
+<br>git switch main
+<br>
+<br><span class="cm"># Delete a branch (after merging)</span>
+<br>git branch -d feature/login
+<br>
+<br><span class="cm"># List all remote branches too</span>
+<br>git branch -a</div>
+
+<h2>Branch Naming Conventions</h2>
+<ul>
+  <li><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">feature/user-auth</code> — New feature</li>
+  <li><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">fix/login-crash</code> — Bug fix</li>
+  <li><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">hotfix/security-patch</code> — Urgent production fix</li>
+  <li><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">chore/update-deps</code> — Maintenance task</li>
+</ul>
+
+<div class="tryit-wrapper">
+  <div class="tryit-header"><span>Branch Workflow</span><button class="tryit-run" onclick="runTryit('git4')">▶ Run</button></div>
+  <div class="tryit-body">
+    <textarea class="tryit-editor" id="editorgit4"># Typical feature branch workflow:
+
+git switch main               # start from main
+git pull                      # get latest changes
+git switch -c feature/signup  # create & switch to new branch
+
+# ... make changes, write code ...
+
+git add .
+git commit -m "Add signup form with validation"
+git commit -m "Connect signup to Firebase"
+
+git switch main               # go back to main
+git merge feature/signup      # merge your work in
+git branch -d feature/signup  # clean up branch</textarea>
+    <div class="tryit-output" id="outputgit4"><em style="color:#888">Click ▶ Run to see output</em></div>
+  </div>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ Which command creates a new branch AND switches to it in one step?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git branch new-feature</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git checkout new-feature</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">git switch -c new-feature</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git merge new-feature</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Merging & Conflicts",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Merging & Conflicts</div>
+<h1>Merging & Conflicts</h1>
+<p><strong>Merging</strong> combines the work from two branches into one. Most of the time Git does this automatically — but sometimes two people edit the same line and Git needs your help.</p>
+
+<h2>Merging a Branch</h2>
+<div class="code-box"><span class="cm"># Switch to the branch you want to merge INTO</span>
+<br>git switch main
+<br>
+<br><span class="cm"># Merge the feature branch into main</span>
+<br>git merge feature/login
+<br>
+<br><span class="cm"># Output (fast-forward):</span>
+<br>Updating 7b1e4a9..a3f8c2d
+<br>Fast-forward
+<br> login.html | 42 ++++++++++
+<br> 1 file changed, 42 insertions(+)</div>
+
+<h2>Types of Merges</h2>
+<ul>
+  <li><strong>Fast-forward</strong> — No diverging history, Git just moves the pointer forward. Clean and simple.</li>
+  <li><strong>3-way merge</strong> — Both branches have new commits. Git creates a merge commit combining both.</li>
+</ul>
+
+<h2>Merge Conflicts</h2>
+<p>A conflict happens when two branches changed the <em>same lines</em> of the same file. Git marks the conflict and asks you to resolve it manually.</p>
+<div class="code-box"><span class="cm"># Conflict markers Git adds to the file:</span>
+<br>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+<br>  &lt;h1&gt;Welcome to AI Schools&lt;/h1&gt;
+<br>=======
+<br>  &lt;h1&gt;Learn AI for Free&lt;/h1&gt;
+<br>&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/new-hero
+<br>
+<br><span class="cm"># HEAD = your current branch (what you had)</span>
+<br><span class="cm"># Below ======= = what's coming in from the other branch</span></div>
+
+<h2>Resolving a Conflict</h2>
+<ol>
+  <li>Open the conflicted file in your editor</li>
+  <li>Decide which version to keep (or write a combination)</li>
+  <li>Delete the conflict markers (<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">=======</code>, <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>)</li>
+  <li>Stage and commit the resolved file</li>
+</ol>
+<div class="code-box"><span class="cm"># After editing the file to resolve:</span>
+<br>git add index.html
+<br>git commit -m "Merge feature/new-hero — kept combined heading"
+<br>
+<br><span class="cm"># To abort a merge and go back to before:</span>
+<br>git merge --abort</div>
+
+<div class="warn-box">⚠️ <strong>Prevention tip:</strong> Pull from main frequently while working on your branch (<code>git merge main</code>) to keep conflicts small and manageable.</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ When does a merge conflict occur?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">When you try to push to GitHub without permission</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">When a branch has too many commits</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">When two branches have changed the same lines of the same file</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">When git log shows too many results</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Remote Repositories",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Remote Repositories</div>
+<h1>Remote Repositories</h1>
+<p>A <strong>remote</strong> is a version of your repository hosted on a server (like GitHub). It enables backup, sharing, and collaboration.</p>
+
+<h2>Key Remote Commands</h2>
+<div class="code-box"><span class="cm"># View remotes linked to your repo</span>
+<br>git remote -v
+<br>
+<br><span class="cm"># Output:</span>
+<br>origin  https://github.com/you/repo.git (fetch)
+<br>origin  https://github.com/you/repo.git (push)
+<br>
+<br><span class="cm"># Add a remote (origin is the conventional name)</span>
+<br>git remote add origin https://github.com/you/repo.git
+<br>
+<br><span class="cm"># Change remote URL</span>
+<br>git remote set-url origin https://github.com/you/new-repo.git
+<br>
+<br><span class="cm"># Remove a remote</span>
+<br>git remote remove origin</div>
+
+<h2>Push — Send Your Work to GitHub</h2>
+<div class="code-box"><span class="cm"># Push main branch to origin (first time, set upstream)</span>
+<br>git push -u origin main
+<br>
+<br><span class="cm"># After that, just:</span>
+<br>git push
+<br>
+<br><span class="cm"># Push a feature branch</span>
+<br>git push origin feature/login</div>
+
+<h2>Pull — Get Changes from GitHub</h2>
+<div class="code-box"><span class="cm"># Pull latest changes from remote into current branch</span>
+<br>git pull
+<br>
+<br><span class="cm"># Pull = fetch + merge (two steps in one)</span>
+<br>git fetch origin     <span class="cm"># download changes, don't apply yet</span>
+<br>git merge origin/main <span class="cm"># apply them</span></div>
+
+<h2>The Push/Pull Workflow</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;line-height:2;margin:16px 0">
+<pre style="color:#333">
+Your Machine          GitHub (origin)
+─────────────         ───────────────
+git pull    ←──────── latest commits
+[edit code]
+git add .
+git commit
+git push    ──────────→ updated repo
+</pre>
+</div>
+
+<div class="warn-box">⚠️ <strong>Always pull before you push</strong> if others are collaborating on the same branch — otherwise your push may be rejected because you're behind.</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does <code>git pull</code> do?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Sends your commits to GitHub</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Downloads the latest changes from GitHub and merges them into your current branch</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Creates a new remote repository</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Deletes a remote branch</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Undoing Changes",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Undoing Changes</div>
+<h1>Undoing Changes</h1>
+<p>One of Git's biggest strengths is the ability to undo almost anything. Here are the right tools for each situation.</p>
+
+<h2>Situation 1: Undo Unstaged Changes</h2>
+<p>You edited a file and want to throw the changes away (go back to the last commit).</p>
+<div class="code-box"><span class="cm"># Discard changes in a specific file</span>
+<br>git restore index.html
+<br>
+<br><span class="cm"># Discard ALL unstaged changes</span>
+<br>git restore .</div>
+<div class="warn-box">⚠️ This permanently discards your edits — there's no undo for this one.</div>
+
+<h2>Situation 2: Unstage a File</h2>
+<p>You ran <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">git add</code> but changed your mind — remove from staging without losing edits.</p>
+<div class="code-box">git restore --staged index.html</div>
+
+<h2>Situation 3: Undo the Last Commit (Keep Changes)</h2>
+<p>You committed too soon. Undo the commit but keep your file edits.</p>
+<div class="code-box"><span class="cm"># Undo last commit, keep files staged</span>
+<br>git reset --soft HEAD~1
+<br>
+<br><span class="cm"># Undo last commit, keep files but unstaged</span>
+<br>git reset HEAD~1</div>
+
+<h2>Situation 4: Revert a Commit (Safe for Shared Branches)</h2>
+<p>If you've already pushed a bad commit, <strong>don't rewrite history</strong>. Use <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">git revert</code> instead — it creates a new commit that undoes the changes.</p>
+<div class="code-box"><span class="cm"># Revert a specific commit by its hash</span>
+<br>git revert a3f8c2d
+<br>
+<br><span class="cm"># A new "Revert" commit is added — history stays intact</span></div>
+
+<h2>Situation 5: Fix the Last Commit Message</h2>
+<div class="code-box"><span class="cm"># Change the message of the very last commit</span>
+<br>git commit --amend -m "Correct commit message"
+<br>
+<br><span class="cm"># Only do this BEFORE pushing — never amend public commits</span></div>
+
+<h2>Quick Reference</h2>
+<div style="overflow-x:auto;margin:16px 0">
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+  <tr style="background:#282A35;color:#fff">
+    <th style="padding:10px 14px;text-align:left">Situation</th>
+    <th style="padding:10px 14px;text-align:left">Command</th>
+    <th style="padding:10px 14px;text-align:left">Safe to use after push?</th>
+  </tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px;border-bottom:1px solid #eee">Discard file edits</td><td style="padding:10px 14px;border-bottom:1px solid #eee">git restore file</td><td style="padding:10px 14px;border-bottom:1px solid #eee">✅ Yes</td></tr>
+  <tr><td style="padding:10px 14px;border-bottom:1px solid #eee">Unstage file</td><td style="padding:10px 14px;border-bottom:1px solid #eee">git restore --staged file</td><td style="padding:10px 14px;border-bottom:1px solid #eee">✅ Yes</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px;border-bottom:1px solid #eee">Undo last commit</td><td style="padding:10px 14px;border-bottom:1px solid #eee">git reset HEAD~1</td><td style="padding:10px 14px;border-bottom:1px solid #eee">❌ No</td></tr>
+  <tr><td style="padding:10px 14px;border-bottom:1px solid #eee">Undo pushed commit</td><td style="padding:10px 14px;border-bottom:1px solid #eee">git revert &lt;hash&gt;</td><td style="padding:10px 14px;border-bottom:1px solid #eee">✅ Yes</td></tr>
+  <tr style="background:#f9f9f9"><td style="padding:10px 14px">Fix commit message</td><td style="padding:10px 14px">git commit --amend</td><td style="padding:10px 14px">❌ No</td></tr>
+</table>
+</div>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ You pushed a buggy commit to GitHub. What is the safest way to undo it?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git reset --hard HEAD~1 and force push</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">git revert — it creates a new commit that undoes the changes without rewriting history</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Delete the repository and start again</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">git restore .</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Pull Requests & GitHub Flow",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Pull Requests</div>
+<h1>Pull Requests & GitHub Flow</h1>
+<p>A <strong>Pull Request (PR)</strong> is a GitHub feature that lets you propose changes from one branch to another, with a built-in code review process before merging.</p>
+
+<h2>Why Pull Requests?</h2>
+<ul>
+  <li>Team members can <strong>review your code</strong> before it goes to main</li>
+  <li>Automated tests can run on the PR before merging</li>
+  <li>Gives a clear record of <strong>why</strong> a change was made (discussion thread)</li>
+  <li>Prevents accidental direct pushes to main</li>
+</ul>
+
+<h2>GitHub Flow (The Standard Workflow)</h2>
+<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:2.2;margin:16px 0">
+<pre style="color:#333">
+1. git switch -c feature/my-feature    Create branch
+          ↓
+2. [write code, make commits]          Build the feature
+          ↓
+3. git push origin feature/my-feature  Push to GitHub
+          ↓
+4. Open a Pull Request on GitHub       Propose the change
+          ↓
+5. Team reviews, leaves comments       Code review
+          ↓
+6. Address feedback, push more commits Iterate
+          ↓
+7. PR approved → Merge into main       Ship it! 🚀
+          ↓
+8. git branch -d feature/my-feature   Clean up
+</pre>
+</div>
+
+<h2>Creating a PR via GitHub CLI</h2>
+<div class="code-box"><span class="cm"># After pushing your branch:</span>
+<br>gh pr create --title "Add signup form" --body "Closes #42"
+<br>
+<br><span class="cm"># List open PRs</span>
+<br>gh pr list
+<br>
+<br><span class="cm"># Check out someone else's PR locally</span>
+<br>gh pr checkout 42</div>
+
+<h2>Writing a Good PR Description</h2>
+<div class="info-box">✅ <strong>Good PR includes:</strong><br>
+• <strong>What</strong> changed and why<br>
+• Screenshots for UI changes<br>
+• How to test it<br>
+• Links to related issues (<code>Closes #42</code> auto-closes the issue on merge)<br>
+• Any known limitations</div>
+
+<h2>Protecting the Main Branch</h2>
+<p>In GitHub → Settings → Branches → Branch protection rules, you can require:</p>
+<ul>
+  <li>At least 1 code review approval before merging</li>
+  <li>All CI checks to pass</li>
+  <li>No direct pushes to main</li>
+</ul>
+
+<h2>Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What is the main purpose of a Pull Request?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To download code from GitHub to your machine</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To create a new branch</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">To propose and review changes before merging them into the main branch</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">To resolve merge conflicts automatically</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  },
+  {
+    title: "Git Tips & Best Practices",
+    content: `
+<div class="breadcrumb"><a onclick="showHome()">Home</a> › Git Basics › Tips & Best Practices</div>
+<h1>Git Tips & Best Practices</h1>
+<p>These habits separate developers who struggle with Git from those who use it effortlessly every day.</p>
+
+<h2>Useful Shortcuts & Aliases</h2>
+<div class="code-box"><span class="cm"># Set up short aliases for common commands</span>
+<br>git config --global alias.st status
+<br>git config --global alias.co checkout
+<br>git config --global alias.br branch
+<br>git config --global alias.lg "log --oneline --graph --all"
+<br>
+<br><span class="cm"># Now you can type:</span>
+<br>git st        <span class="cm"># instead of git status</span>
+<br>git lg        <span class="cm"># instead of git log --oneline --graph --all</span></div>
+
+<h2>Stashing — Save Work Without Committing</h2>
+<p>Need to switch branches urgently but not ready to commit? <strong>Stash</strong> saves your work temporarily.</p>
+<div class="code-box"><span class="cm"># Stash your current changes</span>
+<br>git stash
+<br>
+<br><span class="cm"># List stashes</span>
+<br>git stash list
+<br>
+<br><span class="cm"># Apply the most recent stash and remove it</span>
+<br>git stash pop
+<br>
+<br><span class="cm"># Apply without removing (in case you need it again)</span>
+<br>git stash apply</div>
+
+<h2>Cherry-Pick — Take One Commit from Another Branch</h2>
+<div class="code-box"><span class="cm"># Apply a specific commit from another branch</span>
+<br>git cherry-pick a3f8c2d
+<br>
+<br><span class="cm"># Useful when you want just one fix, not a full merge</span></div>
+
+<h2>Best Practices</h2>
+<ul>
+  <li>✅ <strong>Commit often, in small logical units</strong> — one feature or fix per commit</li>
+  <li>✅ <strong>Always branch off main</strong> — never commit directly to main</li>
+  <li>✅ <strong>Pull before you push</strong> — avoid unnecessary conflicts</li>
+  <li>✅ <strong>Write meaningful commit messages</strong> — future-you will thank you</li>
+  <li>✅ <strong>Never commit secrets</strong> — API keys, passwords, .env files</li>
+  <li>✅ <strong>Use .gitignore</strong> — keep node_modules and build files out</li>
+  <li>✅ <strong>Delete merged branches</strong> — keep the repo tidy</li>
+  <li>❌ <strong>Never force push to main</strong> — can destroy teammates' work</li>
+  <li>❌ <strong>Don't rewrite public history</strong> — use git revert instead</li>
+</ul>
+
+<h2>Essential Git Cheat Sheet</h2>
+<div class="code-box"><span class="cm">## Setup</span>
+<br>git config --global user.name "Name"
+<br>git config --global user.email "email"
+<br>
+<br><span class="cm">## Start</span>
+<br>git init | git clone &lt;url&gt;
+<br>
+<br><span class="cm">## Daily workflow</span>
+<br>git status | git add . | git commit -m "msg"
+<br>git push | git pull
+<br>
+<br><span class="cm">## Branches</span>
+<br>git switch -c feature/x | git merge feature/x
+<br>git branch -d feature/x
+<br>
+<br><span class="cm">## Undo</span>
+<br>git restore file | git revert &lt;hash&gt;
+<br>git reset HEAD~1</div>
+
+<div class="info-box">🎓 <strong>Congratulations — you've completed Git Basics!</strong><br><br>
+You now know how to initialise repos, commit changes, branch, merge, collaborate via GitHub, undo mistakes, and work with pull requests.<br><br>
+<strong>Next step:</strong> Practice on a real project. Create a GitHub repo, invite a friend to collaborate, and submit a pull request. Git becomes natural very quickly once you're using it daily.
+</div>
+
+<h2>Final Quiz</h2>
+<div class="quiz-box">
+  <h3>❓ What does <code>git stash</code> do?</h3>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Permanently deletes uncommitted changes</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Commits all changes with an auto-generated message</label>
+  <label class="quiz-option" onclick="checkQuiz(this,true)">Temporarily saves uncommitted changes so you can switch branches cleanly</label>
+  <label class="quiz-option" onclick="checkQuiz(this,false)">Pushes your branch to GitHub</label>
+  <div class="quiz-feedback" id="quiz-feedback"></div>
+</div>`
+  }
+];
+
 let currentLesson = 0;
 let activeCourse = 'ai';
 
 const courseConfig = {
   ai: { lessons: lessons,   title: 'AI Basics' },
   ml: { lessons: mlLessons, title: 'Machine Learning' },
-  dl: { lessons: dlLessons, title: 'Deep Learning' }
+  dl:  { lessons: dlLessons,  title: 'Deep Learning' },
+  git: { lessons: gitLessons, title: 'Git Basics' }
 };
 
 function showHome() {
@@ -2847,7 +3574,8 @@ const tryitOutputs = {
   ml4:   `prob=8.2% → FAIL ❌\nprob=62.2% → PASS ✅\nprob=98.9% → PASS ✅`,
   ml7:   `Centroid 1: 1.5\nCentroid 2: 8.75\nGroup A: [1, 1.5, 2]\nGroup B: [8, 8.5, 9, 9.5]`,
   dl1:   `x     ReLU  Sigmoid  Tanh\n───────────────────────────────────\n-3     0.00  0.05     -0.99\n-1     0.00  0.27     -0.76\n0      0.00  0.50      0.00\n1      1.00  0.73      0.76\n3      3.00  0.95      0.99`,
-  dl6:   `Epoch 1 loss: 2.31\nEpoch 5 loss: 1.05\nEpoch 20 loss: 0.23\nEpoch 50 loss: 0.08`
+  dl6:   `Epoch 1 loss: 2.31\nEpoch 5 loss: 1.05\nEpoch 20 loss: 0.23\nEpoch 50 loss: 0.08`,
+  git4:  `Switched to branch 'main'\nAlready up to date.\nSwitched to a new branch 'feature/signup'\n[feature/signup a1b2c3] Add signup form with validation\n[feature/signup d4e5f6] Connect signup to Firebase\nSwitched to branch 'main'\nMerging feature/signup... Fast-forward\nDeleted branch feature/signup.`
 };
 
 // ── SIGNUP ──────────────────────────────────────────────────────────────────
