@@ -270,6 +270,81 @@
   .quiz-option.wrong { border-color: #e74c3c; background: #fdf0f0; color: #922b21; }
   .quiz-feedback { margin-top: 12px; font-size: 14px; font-weight: 600; display: none; }
 
+  /* Exercises page */
+  .exercises-page { display: none; min-height: 100vh; background: #f5f5f5; }
+  .exercises-hero {
+    background: linear-gradient(135deg, #282A35, #1a1c26);
+    color: #fff; padding: 40px; text-align: center;
+  }
+  .exercises-hero h1 { font-size: 30px; margin-bottom: 8px; }
+  .exercises-hero p { color: #aaa; font-size: 15px; }
+  .ex-tabs {
+    display: flex; gap: 0; background: #fff; border-bottom: 2px solid #e0e0e0;
+    overflow-x: auto; position: sticky; top: 45px; z-index: 998;
+  }
+  .ex-tab {
+    padding: 14px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+    color: #666; border-bottom: 3px solid transparent; white-space: nowrap;
+    transition: color 0.15s; background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .ex-tab:hover { color: #282A35; }
+  .ex-tab.active { color: #04AA6D; border-bottom-color: #04AA6D; }
+  .ex-body { max-width: 780px; margin: 0 auto; padding: 32px 20px; }
+  .ex-score-bar {
+    background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  }
+  .ex-score-bar span { font-size: 14px; color: #555; }
+  .ex-score-val { font-size: 22px; font-weight: 700; color: #04AA6D; }
+
+  /* Exercise card */
+  .ex-card {
+    background: #fff; border-radius: 10px; padding: 24px 28px; margin-bottom: 20px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07); border-left: 4px solid #e0e0e0;
+    transition: border-color 0.2s;
+  }
+  .ex-card.answered-correct { border-left-color: #04AA6D; }
+  .ex-card.answered-wrong   { border-left-color: #e74c3c; }
+  .ex-card .ex-num { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #aaa; margin-bottom: 6px; }
+  .ex-card .ex-q { font-size: 16px; font-weight: 600; color: #282A35; margin-bottom: 16px; line-height: 1.5; }
+  .ex-card .ex-hint { font-size: 12px; color: #aaa; margin-bottom: 10px; font-style: italic; }
+
+  /* Fill in the blank */
+  .ex-blank-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ex-blank {
+    border: none; border-bottom: 2px solid #3498db; background: #f0f7ff;
+    padding: 6px 10px; font-size: 15px; border-radius: 4px 4px 0 0;
+    min-width: 140px; outline: none; font-family: 'Courier New', monospace;
+  }
+  .ex-blank:focus { border-bottom-color: #04AA6D; background: #eafaf3; }
+  .ex-blank.correct { border-bottom-color: #04AA6D; background: #e8f5ee; color: #1a7a4a; }
+  .ex-blank.wrong   { border-bottom-color: #e74c3c; background: #fdf0f0; color: #922b21; }
+
+  /* Code fill */
+  .ex-code {
+    background: #282A35; color: #e0e0e0; border-radius: 6px; padding: 16px 20px;
+    font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; margin-bottom: 14px;
+  }
+  .ex-code-blank {
+    background: #3a3d50; border: 1px solid #04AA6D; border-radius: 4px;
+    color: #04AA6D; padding: 2px 8px; font-family: 'Courier New', monospace;
+    font-size: 13px; min-width: 100px; outline: none;
+  }
+  .ex-code-blank.correct { background: #1a3a2a; color: #2ecc71; border-color: #2ecc71; }
+  .ex-code-blank.wrong   { background: #3a1a1a; color: #e74c3c; border-color: #e74c3c; }
+
+  /* Check button */
+  .ex-check {
+    background: #04AA6D; color: #fff; border: none; padding: 9px 22px;
+    border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 14px;
+  }
+  .ex-check:hover { background: #059862; }
+  .ex-check:disabled { background: #ccc; cursor: default; }
+  .ex-feedback { margin-top: 10px; font-size: 14px; font-weight: 600; display: none; }
+  .ex-feedback.correct { color: #1a7a4a; }
+  .ex-feedback.wrong   { color: #922b21; }
+
   /* Progress bar */
   .progress-wrap { background: #f1f1f1; padding: 12px 20px; border-bottom: 1px solid #ddd; position: sticky; top: 45px; z-index: 999; }
   .progress-label { font-size: 12px; color: #666; margin-bottom: 5px; }
@@ -387,7 +462,7 @@
       </div>
     </div>
     <a href="javascript:void(0)" onclick="alert('Coming soon!')">References</a>
-    <a href="javascript:void(0)" onclick="alert('Coming soon!')">Exercises</a>
+    <a href="javascript:void(0)" onclick="showExercises('ai')">Exercises</a>
     <a href="javascript:void(0)" class="btn-green" style="margin-left:20px" onclick="openSignup()">Sign Up Free</a>
     <span id="adminIndicator" onclick="openAdmin()">🔒 Admin</span>
   </nav>
@@ -496,6 +571,29 @@
       </thead>
       <tbody id="signupsBody"></tbody>
     </table>
+  </div>
+</div>
+
+<!-- EXERCISES PAGE -->
+<div class="exercises-page" id="exercisesPage">
+  <div class="exercises-hero">
+    <h1>✏️ Exercises</h1>
+    <p>Practice what you've learned with hands-on exercises. Fill in the blanks, complete code, and answer questions.</p>
+  </div>
+  <div class="ex-tabs" id="exTabs">
+    <button class="ex-tab active" onclick="switchExerciseTab('ai', this)">🤖 AI Basics</button>
+    <button class="ex-tab" onclick="switchExerciseTab('ml', this)">🧠 Machine Learning</button>
+    <button class="ex-tab" onclick="switchExerciseTab('dl', this)">🔬 Deep Learning</button>
+    <button class="ex-tab" onclick="switchExerciseTab('git', this)">🌿 Git Basics</button>
+  </div>
+  <div class="ex-body">
+    <div class="ex-score-bar">
+      <span>Your score for this set:</span>
+      <span><span class="ex-score-val" id="exScoreVal">0</span> / <span id="exScoreTotal">0</span></span>
+    </div>
+    <div id="exCards"></div>
+    <button class="btn-green" style="margin-top:10px;padding:12px 28px;font-size:15px" onclick="resetExercises()">↺ Reset Exercises</button>
+    <button onclick="showHome()" style="margin-top:10px;margin-left:12px;padding:11px 22px;background:transparent;border:2px solid #04AA6D;color:#04AA6D;border-radius:4px;cursor:pointer;font-size:14px;font-weight:600">← Back to Home</button>
   </div>
 </div>
 
@@ -3533,6 +3631,7 @@ const courseConfig = {
 function showHome() {
   document.getElementById('homePage').style.display = '';
   document.getElementById('coursePage').style.display = 'none';
+  document.getElementById('exercisesPage').style.display = 'none';
   window.scrollTo(0, 0);
 }
 
@@ -3545,6 +3644,7 @@ function showCourse(course) {
   activeCourse = course || 'ai';
   document.getElementById('homePage').style.display = 'none';
   document.getElementById('coursePage').style.display = '';
+  document.getElementById('exercisesPage').style.display = 'none';
 
   // Build sidebar for active course
   const cfg = courseConfig[activeCourse];
@@ -3620,6 +3720,299 @@ const tryitOutputs = {
   dl6:   `Epoch 1 loss: 2.31\nEpoch 5 loss: 1.05\nEpoch 20 loss: 0.23\nEpoch 50 loss: 0.08`,
   git4:  `Switched to branch 'main'\nAlready up to date.\nSwitched to a new branch 'feature/signup'\n[feature/signup a1b2c3] Add signup form with validation\n[feature/signup d4e5f6] Connect signup to Firebase\nSwitched to branch 'main'\nMerging feature/signup... Fast-forward\nDeleted branch feature/signup.`
 };
+
+// ── EXERCISES ───────────────────────────────────────────────────────────────
+const exerciseData = {
+  ai: [
+    { type: 'fill', num: 1,
+      q: 'Complete the sentence: AI stands for ________ Intelligence.',
+      pre: '', blank: 'Artificial', post: ' Intelligence.',
+      hint: 'Think about what AI is short for.' },
+    { type: 'choice', num: 2,
+      q: 'Which of the following is an example of Narrow AI?',
+      options: ['A robot that can do any human task', 'A spam filter', 'An AI that is self-aware', 'General AI'],
+      answer: 1 },
+    { type: 'code', num: 3,
+      q: 'Fill in the missing activation function used in binary classification:',
+      lines: ['function classify(z) {', '  return ________(z) >= 0.5 ? "spam" : "not spam";', '}'],
+      blank: 'sigmoid',
+      hint: 'This function maps any number to a value between 0 and 1.' },
+    { type: 'fill', num: 4,
+      q: 'The ________ Test, proposed in 1950, asks whether a machine can hold a conversation indistinguishable from a human.',
+      pre: 'The ', blank: 'Turing', post: ' Test.',
+      hint: 'Named after a famous British mathematician.' },
+    { type: 'choice', num: 5,
+      q: 'What year did the deep learning revolution begin with AlexNet winning ImageNet?',
+      options: ['2001', '2007', '2012', '2017'],
+      answer: 2 },
+    { type: 'fill', num: 6,
+      q: 'In ML, if a model performs well on training data but poorly on test data, it is called ________.',
+      pre: '', blank: 'overfitting', post: '.',
+      hint: 'The model memorised the training data instead of generalising.' },
+    { type: 'code', num: 7,
+      q: 'Complete this pseudocode for a basic ML pipeline:',
+      lines: ['const model = new LinearRegression();', 'model.________(trainData);', 'const accuracy = model.evaluate(testData);'],
+      blank: 'train',
+      hint: 'The step where the model learns from data.' },
+    { type: 'choice', num: 8,
+      q: 'Which AI architecture powers modern LLMs like GPT-4 and Claude?',
+      options: ['CNN', 'RNN', 'Transformer', 'Decision Tree'],
+      answer: 2 },
+  ],
+  ml: [
+    { type: 'fill', num: 1,
+      q: 'In supervised learning, the dataset must contain both inputs and ________ labels.',
+      pre: '', blank: 'output', post: ' labels.',
+      hint: 'The correct answers the model learns from.' },
+    { type: 'choice', num: 2,
+      q: 'Which ML type would you use to detect fraudulent transactions without labeled examples?',
+      options: ['Supervised Learning', 'Reinforcement Learning', 'Unsupervised Learning', 'Transfer Learning'],
+      answer: 2 },
+    { type: 'code', num: 3,
+      q: 'Fill in the normalisation formula (Min-Max scaling):',
+      lines: ['// Normalise x to range 0–1', 'normalized = (x - ________) / (max - min);'],
+      blank: 'min',
+      hint: 'Subtract this value to shift the range to start at 0.' },
+    { type: 'fill', num: 4,
+      q: 'A Random Forest combines many ________ Trees and takes a majority vote.',
+      pre: '', blank: 'Decision', post: ' Trees.',
+      hint: 'The base model used in ensemble.' },
+    { type: 'choice', num: 5,
+      q: 'What does MSE stand for in regression evaluation?',
+      options: ['Maximum Squared Error', 'Mean Squared Error', 'Minimum Standard Error', 'Model Score Evaluation'],
+      answer: 1 },
+    { type: 'code', num: 6,
+      q: 'Complete the K-Means update step:',
+      lines: ['// Move centroid to mean of its cluster', 'centroid = cluster.reduce((a,b) => a+b, 0) / cluster.________;'],
+      blank: 'length',
+      hint: 'Divide by the number of points in the cluster.' },
+    { type: 'fill', num: 7,
+      q: 'The support vectors in an SVM are the data points ________ to the decision boundary.',
+      pre: '', blank: 'closest', post: ' to the decision boundary.',
+      hint: 'They define the margin.' },
+    { type: 'choice', num: 8,
+      q: 'Which technique randomly zeros out neurons during training to prevent overfitting?',
+      options: ['Batch Normalisation', 'Weight Decay', 'Dropout', 'Early Stopping'],
+      answer: 2 },
+  ],
+  dl: [
+    { type: 'fill', num: 1,
+      q: 'The "deep" in Deep Learning refers to the number of ________ in a neural network.',
+      pre: '', blank: 'layers', post: '.',
+      hint: 'Each one learns more abstract features.' },
+    { type: 'code', num: 2,
+      q: 'Fill in the ReLU activation function:',
+      lines: ['function relu(x) {', '  return Math.________(0, x);', '}'],
+      blank: 'max',
+      hint: 'Returns the larger of two values.' },
+    { type: 'choice', num: 3,
+      q: 'What does a Pooling layer in a CNN do?',
+      options: ['Adds more filters', 'Reduces spatial dimensions', 'Computes the loss', 'Normalises weights'],
+      answer: 1 },
+    { type: 'fill', num: 4,
+      q: 'In backpropagation, gradients are propagated ________ through the network.',
+      pre: '', blank: 'backwards', post: '.',
+      hint: 'The direction opposite to the forward pass.' },
+    { type: 'choice', num: 5,
+      q: 'Which optimiser combines Momentum and RMSprop and is the default choice for most tasks?',
+      options: ['SGD', 'Adagrad', 'Adam', 'RMSprop'],
+      answer: 2 },
+    { type: 'code', num: 6,
+      q: 'Complete the weight update rule for gradient descent:',
+      lines: ['// Update weight w', 'w = w - ________ * gradient;'],
+      blank: 'learning_rate',
+      hint: 'Controls the step size — too large and you overshoot, too small and training is slow.' },
+    { type: 'fill', num: 7,
+      q: 'In a GAN, the ________ tries to create fake data realistic enough to fool the Discriminator.',
+      pre: '', blank: 'Generator', post: '.',
+      hint: 'One of two competing networks in a GAN.' },
+    { type: 'choice', num: 8,
+      q: 'What is the first thing to try when debugging a deep learning model?',
+      options: ['Collect more data', 'Switch frameworks', 'Overfit a single batch', 'Increase learning rate'],
+      answer: 2 },
+  ],
+  git: [
+    { type: 'fill', num: 1,
+      q: 'The command to create a new Git repository is git ________.',
+      pre: 'git ', blank: 'init', post: '',
+      hint: 'Short for "initialise".' },
+    { type: 'code', num: 2,
+      q: 'Fill in the command to stage all changed files:',
+      lines: ['# Stage everything', 'git ________ .'],
+      blank: 'add',
+      hint: 'Moves files to the staging area.' },
+    { type: 'choice', num: 3,
+      q: 'What does `git pull` do?',
+      options: ['Sends commits to GitHub', 'Downloads and merges remote changes into your branch', 'Creates a new branch', 'Deletes a remote branch'],
+      answer: 1 },
+    { type: 'code', num: 4,
+      q: 'Complete the command to create and switch to a new branch in one step:',
+      lines: ['git ________ -c feature/login'],
+      blank: 'switch',
+      hint: 'The modern alternative to git checkout -b.' },
+    { type: 'fill', num: 5,
+      q: 'To safely undo a commit that has already been pushed, use git ________ instead of reset.',
+      pre: 'git ', blank: 'revert', post: '',
+      hint: 'Creates a new commit that undoes the change — safe for shared branches.' },
+    { type: 'choice', num: 6,
+      q: 'What does `git stash` do?',
+      options: ['Permanently deletes changes', 'Commits with an auto message', 'Temporarily saves uncommitted changes', 'Pushes to GitHub'],
+      answer: 2 },
+    { type: 'code', num: 7,
+      q: 'Complete the command to view a compact one-line history:',
+      lines: ['git log ________'],
+      blank: '--oneline',
+      hint: 'A flag that condenses each commit to one line.' },
+    { type: 'fill', num: 8,
+      q: 'A ________ Request on GitHub lets teammates review your code before it is merged into main.',
+      pre: '', blank: 'Pull', post: ' Request.',
+      hint: 'A GitHub feature for code review.' },
+  ]
+};
+
+let exActiveTab = 'ai';
+let exScores = { ai: 0, ml: 0, dl: 0, git: 0 };
+let exAnswered = {};
+
+function showExercises(tab) {
+  tab = tab || 'ai';
+  document.getElementById('homePage').style.display = 'none';
+  document.getElementById('coursePage').style.display = 'none';
+  document.getElementById('exercisesPage').style.display = 'block';
+  switchExerciseTab(tab, document.querySelector('.ex-tab'));
+  window.scrollTo(0, 0);
+}
+
+function switchExerciseTab(tab, btn) {
+  exActiveTab = tab;
+  document.querySelectorAll('.ex-tab').forEach(t => t.classList.remove('active'));
+  // Find the right tab button
+  document.querySelectorAll('.ex-tab').forEach(t => {
+    if (t.getAttribute('onclick').includes("'" + tab + "'")) t.classList.add('active');
+  });
+  renderExercises(tab);
+}
+
+function renderExercises(tab) {
+  const exercises = exerciseData[tab];
+  const container = document.getElementById('exCards');
+  const answered = exAnswered[tab] || {};
+  let score = 0;
+  Object.values(answered).forEach(a => { if (a) score++; });
+  document.getElementById('exScoreVal').textContent = score;
+  document.getElementById('exScoreTotal').textContent = exercises.length;
+
+  container.innerHTML = exercises.map((ex, i) => {
+    const isDone = answered[i] !== undefined;
+    const isCorrect = answered[i] === true;
+    const cardClass = isDone ? (isCorrect ? 'answered-correct' : 'answered-wrong') : '';
+    if (ex.type === 'fill') return renderFill(ex, i, tab, cardClass, isDone);
+    if (ex.type === 'choice') return renderChoice(ex, i, tab, cardClass, isDone);
+    if (ex.type === 'code') return renderCode(ex, i, tab, cardClass, isDone);
+    return '';
+  }).join('');
+}
+
+function renderFill(ex, i, tab, cardClass, isDone) {
+  const answered = (exAnswered[tab] || {})[i];
+  const blankClass = isDone ? (answered ? 'correct' : 'wrong') : '';
+  const feedbackStyle = isDone ? 'display:block' : 'display:none';
+  const feedbackClass = answered ? 'correct' : 'wrong';
+  const feedbackMsg = answered ? '✅ Correct!' : '❌ The answer is: ' + ex.blank;
+  return "<div class='ex-card " + cardClass + "' id='excard-" + tab + "-" + i + "'>" +
+    "<div class='ex-num'>Exercise " + ex.num + " — Fill in the Blank</div>" +
+    "<div class='ex-q'>" + ex.q + "</div>" +
+    (ex.hint ? "<div class='ex-hint'>Hint: " + ex.hint + "</div>" : '') +
+    "<div class='ex-blank-wrap'>" +
+    "<input class='ex-blank " + blankClass + "' id='fill-" + tab + "-" + i + "' " +
+    "placeholder='type your answer...' " + (isDone ? 'disabled' : '') +
+    " onkeydown='if(event.key===\"Enter\") checkFill(\"" + tab + "\"," + i + ")'>" +
+    "</div>" +
+    "<button class='ex-check' onclick='checkFill(\"" + tab + "\"," + i + ")' " + (isDone ? 'disabled' : '') + ">Check Answer</button>" +
+    "<div class='ex-feedback " + feedbackClass + "' style='" + feedbackStyle + "'>" + feedbackMsg + "</div>" +
+    "</div>";
+}
+
+function renderChoice(ex, i, tab, cardClass, isDone) {
+  const answered = (exAnswered[tab] || {})[i];
+  return "<div class='ex-card " + cardClass + "' id='excard-" + tab + "-" + i + "'>" +
+    "<div class='ex-num'>Exercise " + ex.num + " — Multiple Choice</div>" +
+    "<div class='ex-q'>" + ex.q + "</div>" +
+    ex.options.map((opt, oi) => {
+      let cls = '';
+      if (isDone) {
+        if (oi === ex.answer) cls = 'correct';
+        else if (oi === answered && answered !== ex.answer) cls = 'wrong';
+      }
+      return "<label class='quiz-option " + cls + "' style='" + (isDone ? 'pointer-events:none' : '') + "' " +
+        "onclick='checkChoice(\"" + tab + "\"," + i + "," + oi + ")'>" + opt + "</label>";
+    }).join('') +
+    "<div class='ex-feedback " + (answered === ex.answer ? 'correct' : 'wrong') + "' style='" + (isDone ? 'display:block' : 'display:none') + "'>" +
+    (answered === ex.answer ? '✅ Correct!' : '❌ The correct answer is: ' + ex.options[ex.answer]) +
+    "</div></div>";
+}
+
+function renderCode(ex, i, tab, cardClass, isDone) {
+  const answered = (exAnswered[tab] || {})[i];
+  const blankClass = isDone ? (answered ? 'correct' : 'wrong') : '';
+  const feedbackStyle = isDone ? 'display:block' : 'display:none';
+  const feedbackClass = answered ? 'correct' : 'wrong';
+  const feedbackMsg = answered ? '✅ Correct!' : '❌ The answer is: ' + ex.blank;
+  const codeLines = ex.lines.map(line => {
+    if (line.includes('________')) {
+      return line.replace('________',
+        "<input class='ex-code-blank " + blankClass + "' id='code-" + tab + "-" + i + "' " +
+        "value='" + (isDone ? ex.blank : '') + "' " +
+        "placeholder='?' size='" + ex.blank.length + "' " + (isDone ? 'disabled' : '') +
+        " onkeydown='if(event.key===\"Enter\") checkCode(\"" + tab + "\"," + i + ")'>");
+    }
+    return line;
+  }).join('\n');
+  return "<div class='ex-card " + cardClass + "' id='excard-" + tab + "-" + i + "'>" +
+    "<div class='ex-num'>Exercise " + ex.num + " — Code Completion</div>" +
+    "<div class='ex-q'>" + ex.q + "</div>" +
+    (ex.hint ? "<div class='ex-hint'>Hint: " + ex.hint + "</div>" : '') +
+    "<div class='ex-code'><pre style='margin:0;white-space:pre-wrap'>" + codeLines + "</pre></div>" +
+    "<button class='ex-check' onclick='checkCode(\"" + tab + "\"," + i + ")' " + (isDone ? 'disabled' : '') + ">Check Answer</button>" +
+    "<div class='ex-feedback " + feedbackClass + "' style='" + feedbackStyle + "'>" + feedbackMsg + "</div>" +
+    "</div>";
+}
+
+function checkFill(tab, i) {
+  const ex = exerciseData[tab][i];
+  const input = document.getElementById('fill-' + tab + '-' + i);
+  if (!input || !input.value.trim()) return;
+  const correct = input.value.trim().toLowerCase() === ex.blank.toLowerCase();
+  markAnswered(tab, i, correct);
+  renderExercises(tab);
+}
+
+function checkChoice(tab, i, selected) {
+  const ex = exerciseData[tab][i];
+  if ((exAnswered[tab] || {})[i] !== undefined) return;
+  const correct = selected === ex.answer;
+  markAnswered(tab, i, correct);
+  renderExercises(tab);
+}
+
+function checkCode(tab, i) {
+  const ex = exerciseData[tab][i];
+  const input = document.getElementById('code-' + tab + '-' + i);
+  if (!input || !input.value.trim()) return;
+  const correct = input.value.trim().toLowerCase() === ex.blank.toLowerCase();
+  markAnswered(tab, i, correct);
+  renderExercises(tab);
+}
+
+function markAnswered(tab, i, correct) {
+  if (!exAnswered[tab]) exAnswered[tab] = {};
+  exAnswered[tab][i] = correct;
+}
+
+function resetExercises() {
+  exAnswered[exActiveTab] = {};
+  renderExercises(exActiveTab);
+}
 
 // ── SIGNUP ──────────────────────────────────────────────────────────────────
 function openSignup() {
